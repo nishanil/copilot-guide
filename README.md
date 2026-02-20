@@ -35,7 +35,17 @@ What each does · When you'd use it · How they fit together
 │  Tasks               Spawn child agents in CLI (background/sync)    │
 │  Subagents           Spawn child agents in VS Code (auto-parallel)  │
 │  Coding Agent        Autonomous cloud agent — issues in, PRs out    │
+│  Agentic Workflows   Automate repo tasks via GitHub Actions + AI    │
 │  Mission Control     Dashboard to manage coding agents at scale     │
+│  Agents Tab          Repo-level UI for agent tasks and tracking     │
+│                                                                     │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  🧠 PLATFORM — built-in intelligence & extensibility                │
+│                                                                     │
+│  Agentic Memory      Per-repo persistent memory across sessions     │
+│  Copilot Spaces      Project-specific knowledge containers          │
+│  Copilot SDK         Build your own agents as code (Node/Python/Go) │
 │                                                                     │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
@@ -64,7 +74,13 @@ What each does · When you'd use it · How they fit together
   - [Tasks (CLI)](#tasks-cli)
   - [Subagents (VS Code)](#subagents-vs-code)
   - [Copilot Coding Agent](#copilot-coding-agent)
+  - [Agentic Workflows](#agentic-workflows)
   - [Mission Control](#mission-control)
+  - [Agents Tab](#agents-tab)
+- [Platform Features](#platform-features)
+  - [Agentic Memory](#agentic-memory)
+  - [Copilot Spaces](#copilot-spaces)
+  - [Copilot SDK](#copilot-sdk)
 - [Community Projects](#community-projects)
   - [Squad](#squad)
   - [awesome-copilot](#awesome-copilot)
@@ -533,6 +549,115 @@ Available on **GitHub.com**, **VS Code Insiders**, and **GitHub Mobile**.
 
 ---
 
+### Agentic Workflows
+
+Markdown-described automations that run inside **GitHub Actions** — agents triage issues, update docs, fix CI failures, and generate PRs, all triggered by repo events.
+
+> **When you need it:** You want your repo to run on autopilot — issues get triaged, docs stay in sync with code, and CI failures get diagnosed automatically.
+
+**How it works:**
+
+1. **Describe the automation** in a markdown workflow file — what you want done on which trigger
+2. **GitHub Actions invokes the coding agent** with your instructions and repo context
+3. **The agent executes** — reading code, making changes, running tests
+4. **Results appear as PRs** — fully reviewable, with diffs, commit history, and CI results
+
+#### Examples of what you can automate
+
+- Auto-triage and label new issues based on content
+- Diagnose and suggest fixes for CI/CD failures
+- Keep documentation in sync when code changes
+- Generate routine dependency update PRs
+- Improve test coverage on schedule
+
+#### Key details
+
+| | |
+|---|---|
+| **Where** | GitHub Actions + Coding Agent |
+| **Trigger** | Repo events (push, issue created, schedule, etc.) |
+| **Result** | Pull requests — always human-reviewed before merge |
+| **Blog post** | [Automate repository tasks with GitHub Agentic Workflows](https://github.blog/ai-and-ml/automate-repository-tasks-with-github-agentic-workflows/) |
+
+---
+
+### Agents Tab
+
+A repo-level tab on GitHub.com for launching, tracking, and reviewing agent tasks — the repo-scoped companion to Mission Control.
+
+> **When you need it:** You want to see all agent activity for a specific repo in one place, launch new tasks, and review agent-generated PRs without leaving the repo.
+
+- Launch agent tasks directly from the repo
+- Track progress of active agents
+- Review agent-generated pull requests
+- See history of completed agent work
+
+| | |
+|---|---|
+| **Where** | GitHub.com — new tab on each repo |
+| **Scope** | Single repo (vs Mission Control which is cross-repo) |
+
+---
+
+## Platform Features
+
+> Built-in intelligence and extensibility that power the entire Copilot ecosystem.
+
+### Agentic Memory
+
+Per-repo persistent memory — Copilot remembers context across sessions, automatically learning from your interactions and expiring stale information.
+
+> **When you need it:** You're tired of re-explaining your architecture, conventions, or recent decisions every new session. You want Copilot to remember what it learned last time.
+
+**How it works:**
+
+- Copilot stores learnings from sessions as per-repo "memories"
+- Memories are shared across Copilot features (chat, completions, agents, code review)
+- Stale or outdated insights auto-expire for safety
+- You can view and manage memories
+
+| | |
+|---|---|
+| **Scope** | Per-repository, persistent across sessions |
+| **Difference from instructions** | Instructions are manually authored; memory is auto-learned |
+| **Difference from Squad's history.md** | Memory is platform-native and automatic; Squad's is file-based and git-committed |
+
+---
+
+### Copilot Spaces
+
+Project-specific knowledge containers — persistent, shareable collections of context accessible in Codespaces, dev containers, and across Copilot features.
+
+> **When you need it:** You want to package project knowledge (architecture docs, API specs, onboarding guides) into a container that Copilot always has access to, especially for onboarding new team members.
+
+| | |
+|---|---|
+| **Scope** | Per-project, accessible across Copilot surfaces |
+| **Use for** | Onboarding, architecture context, shared team knowledge |
+| **Supports** | Role-based access, public sharing, templates |
+
+---
+
+### Copilot SDK
+
+Programmatic access to Copilot's capabilities in **Node.js**, **Python**, **Go**, and **.NET**. Build your own agents as code — with execution loops, tool orchestration, multi-model routing, and context management.
+
+> **When you need it:** You want agents as *code* rather than *prompts*. Or you need to integrate Copilot into custom automation, CI/CD pipelines, or your own developer tools.
+
+```bash
+# Install (Node.js example)
+npm install @github/copilot-sdk
+```
+
+| | |
+|---|---|
+| **Status** | Technical preview |
+| **Languages** | Node.js, Python, Go, .NET |
+| **Repository** | [github.com/github/copilot-sdk](https://github.com/github/copilot-sdk) |
+| **Difference from agents** | Agents are markdown prompts; SDK is programmatic code |
+
+---
+
 ## Community Projects
 
 > Open-source projects built on top of Copilot's features.
@@ -665,7 +790,12 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 | **Tasks** | CLI child agent spawning | *(runtime tool)* | When you need parallelism in CLI |
 | **Subagents** | VS Code child agents | *(runtime pattern)* | When you need parallelism in VS Code |
 | **Coding Agent** | Autonomous cloud agent | GitHub infrastructure | When you want async issue automation |
+| **Agentic Workflows** | AI + GitHub Actions automation | GitHub Actions | When you want automated repo maintenance |
 | **Mission Control** | Multi-agent dashboard | GitHub.com / VS Code | When managing agents at scale |
+| **Agents Tab** | Repo-level agent UI | GitHub.com | When tracking agent work per repo |
+| **Agentic Memory** | Persistent per-repo memory | Built-in | When you want Copilot to remember across sessions |
+| **Copilot Spaces** | Project knowledge containers | GitHub.com | When packaging shared context for teams |
+| **Copilot SDK** | Programmatic agent building | npm / pip / go | When you need agents as code, not prompts |
 
 ### File Structure
 
@@ -708,7 +838,10 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 - [MCP Servers](https://github.com/microsoft/vscode-docs/blob/main/docs/copilot/customization/mcp-servers.md) · [Subagents](https://code.visualstudio.com/docs/copilot/agents/subagents) · [Agent Skills](https://code.visualstudio.com/docs/copilot/customization/agent-skills) · [Prompt Files](https://code.visualstudio.com/docs/copilot/customization/prompt-files)
 
 **Blog Posts & Guides**
-- [Maximize Agentic Capabilities](https://github.blog/ai-and-ml/github-copilot/how-to-maximize-github-copilots-agentic-capabilities/) · [Mission Control](https://github.blog/changelog/2025-10-28-a-mission-control-to-assign-steer-and-track-copilot-coding-agent-tasks/) · [Agents vs Skills vs Instructions](https://github.com/orgs/community/discussions/183962)
+- [Maximize Agentic Capabilities](https://github.blog/ai-and-ml/github-copilot/how-to-maximize-github-copilots-agentic-capabilities/) · [Mission Control](https://github.blog/changelog/2025-10-28-a-mission-control-to-assign-steer-and-track-copilot-coding-agent-tasks/) · [Agents vs Skills vs Instructions](https://github.com/orgs/community/discussions/183962) · [Agentic Workflows](https://github.blog/ai-and-ml/automate-repository-tasks-with-github-agentic-workflows/)
+
+**Platform**
+- [Copilot SDK](https://github.com/github/copilot-sdk) · [Copilot Spaces](https://github.blog/changelog/2025-05-19-copilot-spaces-public-preview/)
 
 **Community**
 - [awesome-copilot](https://github.com/github/awesome-copilot) · [Squad](https://github.com/bradygaster/squad)
