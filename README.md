@@ -12,8 +12,6 @@ What each does · When you'd use it · How they fit together
 
 </div>
 
----
-
 ## At a Glance
 
 ```
@@ -227,7 +225,7 @@ When creating or modifying database tables.
 
 [Model Context Protocol](https://docs.github.com/en/copilot/how-tos/provide-context/use-mcp/extend-copilot-chat-with-mcp) servers connect Copilot to external tools — databases, APIs, cloud services, issue trackers — so agents can read and write to systems beyond your local files.
 
-> **When you need it:** Your app needs to query PostgreSQL, check GitHub issues, or interact with S3. Without MCP, you'd have to copy-paste data into chat.
+> **When you need it:** Your app needs to query PostgreSQL, check GitHub issues, or interact with cloud storage. Without MCP, you'd have to copy-paste data into chat.
 
 **📁 Location:** `.vscode/mcp.json` (VS Code) or `~/.copilot/mcp-config.json` (CLI)
 
@@ -261,7 +259,7 @@ When creating or modifying database tables.
 |---|---|
 | "Here's my schema, can you write a query?" | Agent reads the schema directly from PostgreSQL |
 | "The issue says..." (you paste it) | Agent reads the issue via GitHub MCP server |
-| "Upload to S3" (you do it manually) | Agent calls S3 API through an MCP server |
+| "Upload to cloud storage" (you do it manually) | Agent calls cloud storage API through an MCP server |
 
 | | |
 |---|---|
