@@ -289,7 +289,7 @@ When creating or modifying database tables.
 
 Custom scripts that run automatically at specific lifecycle events — like pre-commit formatting, post-generation linting, or deployment triggers.
 
-> **When you need it:** You want every code generation to be auto-formatted with Prettier, or every commit to run lint checks, without remembering to do it manually.
+> **When you need it:** Your app needs to interact with other systems, ex: query PostgreSQL, check GitHub issues, or interact with cloud storage. Without MCP, you'd have to copy-paste data into chat.
 
 <details>
 <summary>Example configuration</summary>
