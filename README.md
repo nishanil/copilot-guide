@@ -605,22 +605,46 @@ A repo-level tab on GitHub.com for launching, tracking, and reviewing agent task
 
 ### Agentic Memory
 
-Per-repo persistent memory — Copilot remembers context across sessions, automatically learning from your interactions and expiring stale information.
+Per-repo persistent memory — Copilot automatically captures patterns, conventions, and relationships as you work, then validates them against current code before reuse. Memories expire after **28 days** and are shared across all Copilot surfaces.
 
 > **When you need it:** You're tired of re-explaining your architecture, conventions, or recent decisions every new session. You want Copilot to remember what it learned last time.
 
 **How it works:**
 
-- Copilot stores learnings from sessions as per-repo "memories"
-- Memories are shared across Copilot features (chat, completions, agents, code review)
-- Stale or outdated insights auto-expire for safety
-- You can view and manage memories
+- Copilot **automatically captures** small pieces of knowledge ("memories") as you work — no manual tagging required
+- Memories are **per-repository** and shared across Copilot features (chat, completions, agents, code review, CLI)
+- Before using a memory, Copilot **validates it against the current code** — if the source changed, the memory is dropped
+- Memories **auto-expire after 28 days** to prevent stale advice
+
+#### Enable it
+
+- **Individual (Pro/Pro+):** GitHub Settings → Copilot → enable **Copilot Memory**
+- **Org/Enterprise:** Settings → Copilot → Policies → **Copilot Memory** → enable for members
+- If you belong to multiple orgs, the most restrictive policy applies
+
+#### View & manage memories
+
+- **Repo Settings → Copilot → Memory** — review and delete stored memories per repo
+- Repo owners can curate memories; automated validation handles the rest
+
+<details>
+<summary>Example: what a memory captures</summary>
+
+After a coding agent session where it learns that `src/api/` and `src/types/` must stay in sync:
+
+> *"When modifying API route handlers in `src/api/`, the corresponding TypeScript interfaces in `src/types/` must be updated to match."*
+
+Next session, Copilot automatically applies this knowledge — no re-prompting needed.
+
+</details>
 
 | | |
 |---|---|
-| **Scope** | Per-repository, persistent across sessions |
+| **Scope** | Per-repository, persistent across sessions (28-day expiry) |
+| **Validation** | Just-in-time — checked against source code at use time |
 | **Difference from instructions** | Instructions are manually authored; memory is auto-learned |
-| **Difference from Squad's history.md** | Memory is platform-native and automatic; Squad's is file-based and git-committed |
+| **Docs** | [Enabling and curating Copilot Memory](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/copilot-memory) |
+| **Blog** | [Building an agentic memory system](https://github.blog/ai-and-ml/github-copilot/building-an-agentic-memory-system-for-github-copilot/) |
 
 ---
 
