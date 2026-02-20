@@ -758,7 +758,7 @@ Includes custom instructions examples, agent patterns, orchestration strategies,
 
 - Keep under ~1,000 lines — beyond that, context dilution reduces effectiveness
 - Use headings and bullet points, not prose
-- Make rules actionable: ✅ `Never use any in TypeScript` — ❌ `Try to use good types`
+- Make rules actionable: ✅ `Never use 'any' type in Typescript ` — ❌ `Try to use good types`
 - Use `applyTo:` globs to scope. Don't put backend rules in a file that applies to frontend
 
 ### Writing Prompts
