@@ -841,7 +841,7 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 - [Maximize Agentic Capabilities](https://github.blog/ai-and-ml/github-copilot/how-to-maximize-github-copilots-agentic-capabilities/) · [Mission Control](https://github.blog/changelog/2025-10-28-a-mission-control-to-assign-steer-and-track-copilot-coding-agent-tasks/) · [Agents vs Skills vs Instructions](https://github.com/orgs/community/discussions/183962) · [Agentic Workflows](https://github.blog/ai-and-ml/automate-repository-tasks-with-github-agentic-workflows/)
 
 **Platform**
-- [Copilot SDK](https://github.com/github/copilot-sdk) · [Copilot Spaces](https://github.blog/changelog/2025-05-19-copilot-spaces-public-preview/)
+- [Copilot SDK](https://github.com/github/copilot-sdk) · [Copilot Spaces](https://docs.github.com/en/copilot/how-tos/provide-context/use-copilot-spaces)
 
 **Community**
 - [awesome-copilot](https://github.com/github/awesome-copilot) · [Squad](https://github.com/bradygaster/squad)
