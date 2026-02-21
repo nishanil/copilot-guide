@@ -12,6 +12,14 @@ What each does · When you'd use it · How they fit together
 
 </div>
 
+## Who is this guide for?
+
+This is a single-page reference to get you onboarded quickly with GitHub Copilot's customization and agentic features. It covers what each feature does, when to use it, and how they fit together — so you can start building without reading dozens of docs pages first.
+
+For detailed documentation, see the [Further Reading](#further-reading) section at the end.
+
+> ⚠️ **Note:** This guide was written with the help of an AI agent. I've done my best to keep it accurate, but always double-check details against the [official documentation](https://docs.github.com/en/copilot). If something looks off, it's probably the agent's fault 🤖
+
 ## At a Glance
 
 ```
@@ -32,8 +40,8 @@ What each does · When you'd use it · How they fit together
 │                                                                     │
 │  ⚡ AGENTIC — runtime capabilities for delegation & parallelism     │
 │                                                                     │
-│  Tasks               Spawn child agents in CLI (background/sync)    │
-│  Subagents           Spawn child agents in VS Code (auto-parallel)  │
+│  Running Parallel    Agent auto-delegates work to child agents       │
+│    Tasks             in both CLI and VS Code                         │
 │  Coding Agent        Autonomous cloud agent — issues in, PRs out    │
 │  Agentic Workflows   Automate repo tasks via GitHub Actions + AI    │
 │  Mission Control     Dashboard to manage coding agents at scale     │
@@ -71,8 +79,7 @@ What each does · When you'd use it · How they fit together
   - [Custom Agents](#custom-agents)
   - [Plugins](#plugins)
 - [Agentic Features](#agentic-features)
-  - [Tasks (CLI)](#tasks-cli)
-  - [Subagents (VS Code)](#subagents-vs-code)
+  - [Running Parallel Tasks](#running-parallel-tasks)
   - [Copilot Coding Agent](#copilot-coding-agent)
   - [Agentic Workflows](#agentic-workflows)
   - [Mission Control](#mission-control)
@@ -404,78 +411,61 @@ copilot plugin list
 
 > Runtime capabilities — how Copilot delegates work, runs in parallel, and operates autonomously.
 
-### Tasks (CLI)
+### Running Parallel Tasks
 
-The `task` tool lets an agent (or you in Copilot CLI) spawn a child agent in a **separate context window** to do focused work.
+When your request involves multiple independent jobs, the Copilot agent automatically breaks it into smaller pieces and delegates them to **child agents** running in parallel. You don't call any special syntax — just describe what you need and the agent decides when to fan out. This works in both **Copilot CLI** and **VS Code**.
 
-> **When you need it:** You want to run multiple checks in parallel, or delegate focused work without polluting the current context.
+> **When you need it:** Your request naturally involves multiple independent jobs — running tests while linting, scanning different parts of the codebase, or checking several things at once.
 
-```
-task(
-  agent_type: "general-purpose",
-  mode: "background",
-  model: "claude-sonnet-4",
-  description: "🧪 Security scan",
-  prompt: "Check all API routes for missing auth middleware..."
-)
-```
-
-#### Modes
-
-| Mode | Behavior | Use when |
-|------|----------|----------|
-| `"sync"` | Blocks until the child agent finishes | You need the result before continuing |
-| `"background"` | Runs in parallel, collect later via `read_agent` | Independent work, fan-out |
-
-#### Agent types
-
-| Type | What it does | Model tier |
-|------|-------------|-------|
-| `explore` | Read-only codebase search and Q&A | Fast/cheap |
-| `task` | Run commands (tests, builds, lints) | Fast/cheap |
-| `general-purpose` | Full capability — code, edit, reason | Standard |
-| `code-review` | Review diffs, only surface real issues | Standard |
-
-#### Parallelism
-
-The key trick: **multiple `task` calls in a single response = true parallel execution.**
+#### What you say → What happens
 
 ```
-// All three fire at once:
-task(mode: "background", prompt: "Check frontend for XSS...")
-task(mode: "background", prompt: "Check backend for auth bypass...")
-task(mode: "background", prompt: "Run npm audit...")
+You:  "Run the tests, lint the code, and check for security issues in RecipeShare."
 ```
+
+Behind the scenes the agent spawns three child agents that work **simultaneously**:
+
+```
+┌─ child 1 ─────────────────┐  ┌─ child 2 ──────────────┐  ┌─ child 3 ──────────────────┐
+│ npm test                   │  │ npm run lint            │  │ Scan routes for missing    │
+│ (runs full test suite)     │  │ (checks style issues)   │  │ auth middleware             │
+└────────────────────────────┘  └─────────────────────────┘  └────────────────────────────┘
+```
+
+You see progress updates as each child finishes, then a consolidated summary — no extra steps on your part.
+
+#### More examples of prompts that trigger parallel work
+
+| What you ask | What the agent delegates |
+|---|---|
+| *"Do a security audit of the repo"* | Parallel scans: XSS in frontend, auth in backend, `npm audit` |
+| *"Refactor the database layer and make sure nothing breaks"* | One agent refactors, another runs the test suite continuously |
+| *"Explain how auth works and also how billing works"* | Two agents read different parts of the codebase at once |
+
+#### Invoke from a prompt file (VS Code)
+
+You can wire parallel delegation into a reusable [prompt file](#prompt-files) by adding `agent` to the `tools` frontmatter. The agent then spawns child agents whenever the prompt instructions suggest isolated or parallel work.
+
+<details>
+<summary>Example — <code>review-feature.prompt.md</code></summary>
+
+```markdown
+---
+name: review-feature
+tools: ['agent', 'read', 'search']
+---
+Run a subagent to research the new feature implementation details and return only
+information relevant for user documentation. Then summarise the findings.
+```
+
+</details>
 
 | | |
 |---|---|
-| **Where** | Copilot CLI only |
-| **Context** | Each child gets its own isolated context window |
-| **No file needed** | Runtime tool, not a config file |
-
----
-
-### Subagents (VS Code)
-
-The VS Code equivalent of the `task` tool. Your agent spawns child agents via `runSubagent` for parallel work.
-
-> **When you need it:** You're in VS Code (not CLI) and want the same parallel delegation that `task` provides.
-
-```
-runSubagent(prompt: "Check all React components for XSS patterns...")
-runSubagent(prompt: "Check all API routes for missing auth middleware...")
-runSubagent(prompt: "Run npm audit and analyze results...")
-```
-
-#### Tasks vs Subagents
-
-| | Tasks (`task` tool) | Subagents (`runSubagent`) |
-|---|---|---|
-| **Platform** | Copilot CLI | VS Code |
-| **Parallelism** | `mode: "background"` + `read_agent` polling | Multiple calls in one turn auto-parallelize |
-| **Model selection** | Per-spawn `model` param | Uses session model |
-| **Agent types** | `explore`, `task`, `general-purpose`, `code-review` | One type — prompt determines behavior |
-| **Result collection** | Manual via `read_agent` | Automatic — results return when done |
+| **Where** | Copilot CLI and VS Code |
+| **Context** | Each child agent gets its own isolated context window |
+| **No file needed** | Runtime capability (but can be triggered from a prompt file in VS Code) |
+| **Docs** | [Subagents (VS Code)](https://code.visualstudio.com/docs/copilot/agents/subagents) · [Comparing CLI Features](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/comparing-cli-features) |
 
 ---
 
@@ -539,7 +529,7 @@ Available on **GitHub.com**, **VS Code Insiders**, and **GitHub Mobile**.
 
 #### Local vs Cloud agents
 
-| | Tasks / Subagents | Coding Agent + Mission Control |
+| | Running Parallel Tasks | Coding Agent + Mission Control |
 |---|---|---|
 | **Runs on** | Your machine | GitHub cloud infrastructure |
 | **Interaction** | Synchronous — in a chat session | Asynchronous — works while you sleep |
@@ -811,8 +801,7 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 | **Hooks** | Lifecycle automation | `.copilot/hooks.json` | When you want auto-formatting/linting |
 | **Agents** | Named specialist personas | `.github/agents/{name}.agent.md` | When you need dedicated workflow owners |
 | **Plugins** | Bundled agent toolkits | `plugin.json` manifest | When sharing agent setups across repos |
-| **Tasks** | CLI child agent spawning | *(runtime tool)* | When you need parallelism in CLI |
-| **Subagents** | VS Code child agents | *(runtime pattern)* | When you need parallelism in VS Code |
+| **Running Parallel Tasks** | Agent auto-delegates parallel work | *(runtime capability)* | When your request has multiple independent jobs |
 | **Coding Agent** | Autonomous cloud agent | GitHub infrastructure | When you want async issue automation |
 | **Agentic Workflows** | AI + GitHub Actions automation | GitHub Actions | When you want automated repo maintenance |
 | **Mission Control** | Multi-agent dashboard | GitHub.com / VS Code | When managing agents at scale |
