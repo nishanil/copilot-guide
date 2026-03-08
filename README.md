@@ -779,46 +779,80 @@ npm install @github/copilot-sdk
 
 ### Squad
 
-A persistent team of AI agents with identity, memory, and parallel coordination — all through prompt engineering.
+A persistent team of AI agents with identity, memory, and parallel coordination — now with its own CLI, interactive shell, and SDK.
 
 **Repository:** [github.com/bradygaster/squad](https://github.com/bradygaster/squad)
 
 ```bash
-npx github:bradygaster/squad
+npm install --save-dev @bradygaster/squad-cli
+npx squad init
 ```
+
+> **Note:** GitHub-native distribution (`npx github:bradygaster/squad`) has been removed. All distribution is now via npm. See the [Migration Guide](https://github.com/bradygaster/squad/blob/main/docs/get-started/migration.md) if upgrading from an older version.
 
 <details>
 <summary>What gets created</summary>
 
 ```
-.ai-team/                          # Team state (committed to git)
+.squad/                            # Team state (committed to git)
 ├── team.md                        # Roster — who's on the team
 ├── decisions.md                   # Shared brain — team decisions
 ├── routing.md                     # Who handles what
+├── ceremonies.md                  # Sprint ceremonies config
+├── casting/
+│   ├── policy.json                # Universe theme & agent count
+│   ├── registry.json              # Persistent name registry
+│   └── history.json               # Who was cast when
 ├── agents/
-│   ├── stark/
-│   │   ├── charter.md            # Lead — identity, expertise
-│   │   └── history.md            # What Stark knows about YOUR project
-│   ├── parker/charter.md         # Frontend specialist
-│   ├── banner/charter.md         # Backend specialist
-│   └── romanoff/charter.md       # Tester
+│   ├── Keaton/
+│   │   ├── charter.md             # Lead — identity, expertise
+│   │   └── history.md             # What Keaton knows about YOUR project
+│   ├── McManus/charter.md         # Frontend specialist
+│   ├── Verbal/charter.md          # Backend specialist
+│   ├── Fenster/charter.md         # Tester
+│   └── Kobayashi/charter.md       # Scribe
+├── skills/                        # Learned domain knowledge
+├── sessions/                      # Crash recovery checkpoints
 ├── log/                           # Session history
 └── orchestration-log/             # What was spawned and why
 
-.github/agents/squad.agent.md     # The coordinator (~1,771 lines)
+.github/agents/squad.agent.md     # The coordinator
 ```
 
 </details>
 
 **How it works:** You say *"Team, build the login page"* → the coordinator spawns agents in parallel using the `task` tool → each agent works in its own context → decisions are merged via a drop-box pattern → knowledge persists in `history.md` across sessions.
 
+#### Interactive shell & CLI
+
+Run `squad` with no arguments to enter the interactive shell:
+
+```
+squad > @Keaton, analyze the architecture of this project
+squad > Build the login page
+squad > /status
+```
+
+Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issues), `squad copilot` (add/remove @copilot), `squad doctor`, `squad nap` (context hygiene), `squad export`/`import`, `squad aspire` (observability dashboard).
+
+#### What's new (v0.8.x)
+
+- **SubSquads** — break large teams into focused sub-groups (renamed from workstreams)
+- **Crash recovery** — sessions persist to disk; agents resume from checkpoint after failures
+- **Plugin marketplace** — `squad plugin marketplace add|browse|list`
+- **Azure DevOps adapter** — Squad for enterprise via `CommunicationAdapter`
+- **Upstream sources** — `squad upstream add|sync` to pull from shared squad configs
+- **Context hygiene** — `squad nap --deep` to compress and prune accumulated context
+- **Ralph** — event-driven monitoring agent that watches all agent activity
+
 | | Vanilla Custom Agent | Squad |
 |---|---|---|
 | **Memory** | Fresh every session | `history.md` per agent, `decisions.md` shared |
-| **Identity** | Generic | Persistent themed names (MCU, Star Wars, etc.) |
+| **Identity** | Generic | Persistent themed names (MCU, Usual Suspects, etc.) |
 | **Coordination** | Manual | Auto-routes based on `routing.md` |
-| **Parallelism** | DIY | Built-in fan-out |
-| **Git-native** | Just a markdown file | Full `.ai-team/` folder — clone = get the team |
+| **Parallelism** | DIY | Built-in fan-out with orchestration logging |
+| **Crash recovery** | None | Persistent sessions with checkpoint resumption |
+| **Git-native** | Just a markdown file | Full `.squad/` folder — clone = get the team |
 
 ---
 
