@@ -8,17 +8,8 @@ tools:
   bash: ["curl", "gh"]
   edit:
   web-fetch:
-mcp-servers:
-  tavily:
-    command: npx
-    args: ["-y", "@tavily/mcp-server"]
-    env:
-      TAVILY_API_KEY: "${{ secrets.TAVILY_API_KEY }}"
-    allowed: ["search", "search_news"]
-network:
-  allowed:
-    - defaults
-    - "*.tavily.com"
+  github:
+    toolsets: [repos]
 safe-outputs:
   create-pull-request:
     labels: [automated-update, copilot-updates]
@@ -31,14 +22,13 @@ You are a documentation maintainer for a GitHub Copilot reference guide. Your jo
 
 ## Step 1 — Gather recent Copilot updates
 
-Use the Tavily `search_news` and `search` tools to find the latest GitHub Copilot announcements, changelog entries, and new features from the past 7 days. Focus on:
+Use `web-fetch` to read the following pages and extract the latest entries from the past 7 days:
 
-- The [GitHub Changelog for Copilot](https://github.blog/changelog/label/copilot/)
-- The [GitHub Copilot CLI changelog](https://github.com/github/copilot-cli/blob/main/changelog.md)
-- The [GitHub Blog — Copilot](https://github.blog/ai-and-ml/github-copilot/)
-- New or updated official documentation at docs.github.com/en/copilot
+- https://github.blog/changelog/label/copilot/ — official changelog
+- https://github.com/github/copilot-cli/blob/main/changelog.md — CLI changelog
+- https://github.blog/ai-and-ml/github-copilot/ — blog posts
 
-Also use `web-fetch` to read those pages directly for the latest entries.
+Also use `gh` CLI to check the latest releases and commits in the `github/copilot-cli` repo.
 
 Look for:
 - New features or capabilities (new slash commands, new agent modes, new integrations)
