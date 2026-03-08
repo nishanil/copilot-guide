@@ -46,4 +46,4 @@ plugins:
   - search
 
 nav:
-  - Home: index.md
+  - "": index.md
