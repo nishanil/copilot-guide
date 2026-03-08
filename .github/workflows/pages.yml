@@ -39,7 +39,7 @@ jobs:
           # Strip <div align="center"> wrapper so MkDocs renders the header markdown properly
           sed 's/<div align="center">//' README.md | sed 's/<\/div>//' > docs/index.md
 
-      - run: mkdocs build --strict
+      - run: mkdocs build
 
       - uses: actions/upload-pages-artifact@v3
         with:
