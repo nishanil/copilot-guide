@@ -20,7 +20,7 @@ This is a single-page reference to get you onboarded quickly with GitHub Copilot
 
 For detailed documentation, see the [Further Reading](#further-reading) section at the end.
 
-> ⚠️ **Note:** This guide was written with the help of an AI agent. I've done my best to keep it accurate, but always double-check details against the [official documentation](https://docs.github.com/en/copilot). If something looks off, it's probably the agent's fault 🤖
+> ⚠️ **Note:** This guide was written with the help of an AI agent and is kept up to date by an [agentic workflow](.github/workflows/check-copilot-updates.md) that checks for new Copilot features daily. I've done my best to keep it accurate, but always double-check details against the [official documentation](https://docs.github.com/en/copilot). If something looks off, it's probably the agent's fault 🤖
 
 ## At a Glance
 
