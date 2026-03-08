@@ -40,8 +40,9 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
 │                                                                     │
 │  ⚡ AGENTIC — runtime capabilities for delegation & parallelism     │
 │                                                                     │
-│  Running Parallel    Agent auto-delegates work to child agents       │
-│    Tasks             in both CLI and VS Code                         │
+│  Running Parallel    Auto-delegates work; /fleet for explicit        │
+│    Tasks & /fleet    parallel execution via subagents                │
+│  Autopilot Mode      Hands-off autonomous task completion (CLI)     │
 │  Coding Agent        Autonomous cloud agent — issues in, PRs out    │
 │  Agentic Workflows   Automate repo tasks via GitHub Actions + AI    │
 │  Mission Control     Dashboard to manage coding agents at scale     │
@@ -80,6 +81,7 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
   - [Plugins](#plugins)
 - [Agentic Features](#agentic-features)
   - [Running Parallel Tasks](#running-parallel-tasks)
+  - [Autopilot Mode](#autopilot-mode)
   - [Copilot Coding Agent](#copilot-coding-agent)
   - [Agentic Workflows](#agentic-workflows)
   - [Mission Control](#mission-control)
@@ -413,7 +415,7 @@ copilot plugin list
 
 ### Running Parallel Tasks
 
-When your request involves multiple independent jobs, the Copilot agent automatically breaks it into smaller pieces and delegates them to **child agents** running in parallel. You don't call any special syntax — just describe what you need and the agent decides when to fan out. This works in both **Copilot CLI** and **VS Code**.
+When your request involves multiple independent jobs, the Copilot agent automatically breaks it into smaller pieces and delegates them to **child agents** (subagents) running in parallel. This works in both **Copilot CLI** and **VS Code**. In the CLI you can also use the **`/fleet`** slash command to explicitly request parallel execution.
 
 > **When you need it:** Your request naturally involves multiple independent jobs — running tests while linting, scanning different parts of the codebase, or checking several things at once.
 
@@ -434,6 +436,44 @@ Behind the scenes the agent spawns three child agents that work **simultaneously
 
 You see progress updates as each child finishes, then a consolidated summary — no extra steps on your part.
 
+#### The `/fleet` slash command (CLI)
+
+Use `/fleet` in the CLI to explicitly tell Copilot to break a task into subtasks and run them in parallel via subagents. The main agent acts as an **orchestrator** — it analyses the prompt, maps dependencies, and fans out independent work.
+
+```
+> /fleet Implement the recipe rating feature: add the database migration,
+  create the API endpoint, write unit tests, and update the OpenAPI spec.
+```
+
+Each subagent gets its **own context window**, so individual subtask context doesn't crowd the main session.
+
+**Model selection per subagent** — By default subagents use a low-cost model, but you can request specific models inline:
+
+```
+> /fleet ... Use GPT-5.3-Codex to create the migration.
+  Use Claude Opus 4.5 to analyse test coverage gaps.
+```
+
+**Custom agent assignment** — If you have [custom agents](#custom-agents), reference them with `@`:
+
+```
+> /fleet ... Use @test-writer to create comprehensive unit tests for the endpoint.
+```
+
+Copilot will also auto-select custom agents when it determines they're a good fit.
+
+<details>
+<summary>Typical workflow — plan → fleet → autopilot</summary>
+
+1. Press **Shift+Tab** to switch into [plan mode](#autopilot-mode) and create an implementation plan.
+2. Review and refine the plan with Copilot.
+3. Select **"Accept plan and build on autopilot + /fleet"** when the plan is complete.
+4. Copilot divides the plan into parallel subtasks and works through them autonomously.
+
+</details>
+
+> ⚠️ Each subagent interacts with the LLM independently, so using `/fleet` may consume **more premium requests** than a single-agent session. Use `/model` to check the current model and its multiplier.
+
 #### More examples of prompts that trigger parallel work
 
 | What you ask | What the agent delegates |
@@ -441,6 +481,7 @@ You see progress updates as each child finishes, then a consolidated summary —
 | *"Do a security audit of the repo"* | Parallel scans: XSS in frontend, auth in backend, `npm audit` |
 | *"Refactor the database layer and make sure nothing breaks"* | One agent refactors, another runs the test suite continuously |
 | *"Explain how auth works and also how billing works"* | Two agents read different parts of the codebase at once |
+| `/fleet` *"Generate tests for all RecipeShare services"* | Subagent per service, each writing tests independently |
 
 #### Invoke from a prompt file (VS Code)
 
@@ -462,10 +503,70 @@ information relevant for user documentation. Then summarise the findings.
 
 | | |
 |---|---|
-| **Where** | Copilot CLI and VS Code |
+| **Where** | Copilot CLI (`/fleet`) and VS Code (auto-delegation) |
 | **Context** | Each child agent gets its own isolated context window |
 | **No file needed** | Runtime capability (but can be triggered from a prompt file in VS Code) |
-| **Docs** | [Subagents (VS Code)](https://code.visualstudio.com/docs/copilot/agents/subagents) · [Comparing CLI Features](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/comparing-cli-features) |
+| **Docs** | [Fleet command](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/fleet) · [Subagents (VS Code)](https://code.visualstudio.com/docs/copilot/agents/subagents) · [Comparing CLI Features](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/comparing-cli-features) |
+
+---
+
+### Autopilot Mode
+
+The CLI's **autopilot mode** lets Copilot work autonomously through a multi-step task without waiting for your input after each step — you give the initial instruction and Copilot keeps going until the task is complete.
+
+> **When you need it:** You have a well-defined task (implement a plan, write a test suite, refactor a module) and want Copilot to work to completion without back-and-forth interaction.
+
+#### How to enter autopilot mode
+
+- **During an interactive session** — press **Shift+Tab** to cycle through modes until you reach autopilot
+- **From the command line** — start with the `--autopilot` flag:
+
+```bash
+copilot --autopilot --yolo --max-autopilot-continues 10 -p "Add input validation to all RecipeShare API endpoints"
+```
+
+Copilot continues autonomously until one of these happens:
+1. The task is complete
+2. A blocking problem occurs
+3. You press **Ctrl+C**
+4. The `--max-autopilot-continues` limit is reached (if set)
+
+#### Permissions
+
+On entering autopilot, the CLI prompts you to choose permissions:
+
+1. **Enable all permissions** (recommended) — equivalent to `--allow-all` / `--yolo`
+2. **Continue with limited permissions** — auto-denies tool requests that need approval
+3. **Cancel**
+
+You can grant full permissions mid-session with the `/allow-all` (or `/yolo`) command.
+
+#### Autopilot + Fleet
+
+Autopilot and `/fleet` are independent features that combine well. A common workflow:
+
+1. Use **plan mode** (Shift+Tab) to create a detailed plan
+2. Select **"Accept plan and build on autopilot + /fleet"**
+3. Copilot fans out subtasks to parallel subagents *and* continues autonomously
+
+<details>
+<summary>Key differences — autopilot vs <code>/fleet</code></summary>
+
+| | Autopilot | `/fleet` |
+|---|---|---|
+| **What it does** | Continues working without waiting for your input | Splits work across parallel subagents |
+| **Focus** | Autonomy (no back-and-forth) | Parallelism (faster completion) |
+| **Can be used alone** | Yes | Yes |
+| **Best together** | Large plans with many independent steps | |
+
+</details>
+
+| | |
+|---|---|
+| **Where** | Copilot CLI only |
+| **Toggle** | Shift+Tab during a session, or `--autopilot` flag |
+| **Cost** | Each autonomous continuation step uses premium requests |
+| **Docs** | [Autopilot mode](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/autopilot) |
 
 ---
 
@@ -801,7 +902,8 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 | **Hooks** | Lifecycle automation | `.copilot/hooks.json` | When you want auto-formatting/linting |
 | **Agents** | Named specialist personas | `.github/agents/{name}.agent.md` | When you need dedicated workflow owners |
 | **Plugins** | Bundled agent toolkits | `plugin.json` manifest | When sharing agent setups across repos |
-| **Running Parallel Tasks** | Agent auto-delegates parallel work | *(runtime capability)* | When your request has multiple independent jobs |
+| **Running Parallel Tasks / `/fleet`** | Auto-delegates or explicitly fans out work to subagents | *(runtime capability)* / `/fleet` slash command | When your request has multiple independent jobs |
+| **Autopilot Mode** | Hands-off autonomous task completion | Copilot CLI (`--autopilot` / Shift+Tab) | When you want Copilot to work to completion without interaction |
 | **Coding Agent** | Autonomous cloud agent | GitHub infrastructure | When you want async issue automation |
 | **Agentic Workflows** | AI + GitHub Actions automation | GitHub Actions | When you want automated repo maintenance |
 | **Mission Control** | Multi-agent dashboard | GitHub.com / VS Code | When managing agents at scale |
@@ -845,7 +947,7 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 ## Further Reading
 
 **Official Documentation**
-- [Custom Instructions](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-custom-instructions) · [Custom Agents](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/create-custom-agents-for-cli) · [Plugins](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-creating) · [Comparing CLI Features](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/comparing-cli-features) · [MCP Servers](https://docs.github.com/en/copilot/how-tos/provide-context/use-mcp/extend-copilot-chat-with-mcp) · [Coding Agent](https://docs.github.com/en/copilot/concepts/agents/coding-agent)
+- [Custom Instructions](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-custom-instructions) · [Custom Agents](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/create-custom-agents-for-cli) · [Plugins](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-creating) · [Comparing CLI Features](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/comparing-cli-features) · [MCP Servers](https://docs.github.com/en/copilot/how-tos/provide-context/use-mcp/extend-copilot-chat-with-mcp) · [Coding Agent](https://docs.github.com/en/copilot/concepts/agents/coding-agent) · [Fleet command](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/fleet) · [Autopilot mode](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/autopilot)
 
 **VS Code**
 - [MCP Servers](https://github.com/microsoft/vscode-docs/blob/main/docs/copilot/customization/mcp-servers.md) · [Subagents](https://code.visualstudio.com/docs/copilot/agents/subagents) · [Agent Skills](https://code.visualstudio.com/docs/copilot/customization/agent-skills) · [Prompt Files](https://code.visualstudio.com/docs/copilot/customization/prompt-files)
