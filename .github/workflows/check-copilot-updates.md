@@ -30,6 +30,10 @@ Use `web-fetch` to read the following pages and extract the latest entries from 
 
 Also use `gh` CLI to check the latest releases and commits in the `github/copilot-cli` repo.
 
+Check community projects documented in the guide for updates:
+- Use `gh` CLI to check recent releases and commits in `bradygaster/squad` (Squad)
+- Use `gh` CLI to check recent commits in `github/awesome-copilot`
+
 Look for:
 - New features or capabilities (new slash commands, new agent modes, new integrations)
 - Significant changes to existing features (renames, deprecations, GA announcements)
