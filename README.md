@@ -70,6 +70,8 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
 
 ---
 
+<div class="readme-toc" markdown>
+
 ## Table of Contents
 
 - [Customization Features](#customization-features)
@@ -98,6 +100,8 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
 - [Best Practices](#best-practices)
 - [Quick Reference](#quick-reference)
 - [Further Reading](#further-reading)
+
+</div>
 
 ---
 

@@ -6,6 +6,9 @@
 /* Hide the "Read on GitHub Pages" link when already on Pages */
 .gh-pages-link { display: none; }
 
+/* Hide the inline Table of Contents — right sidebar TOC is sufficient on Pages */
+.readme-toc { display: none; }
+
 /* Top banner style */
 .last-updated-banner {
   font-size: 0.85rem;
