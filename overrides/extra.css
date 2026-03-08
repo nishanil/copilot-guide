@@ -3,6 +3,9 @@
 /* Hide the default bottom position */
 .md-source-file { display: none; }
 
+/* Hide the "Read on GitHub Pages" link when already on Pages */
+.gh-pages-link { display: none; }
+
 /* Top banner style */
 .last-updated-banner {
   font-size: 0.85rem;
