@@ -9,6 +9,10 @@
 /* Hide the inline Table of Contents — right sidebar TOC is sufficient on Pages */
 .readme-toc { display: none !important; }
 
+/* Hide ASCII diagram on Pages, show SVG instead */
+.ascii-glance { display: none !important; }
+.svg-glance img { max-width: 100%; height: auto; }
+
 /* Top banner style */
 .last-updated-banner {
   font-size: 0.85rem;

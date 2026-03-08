@@ -7,6 +7,7 @@ on:
       - 'README.md'
       - 'mkdocs.yml'
       - 'overrides/**'
+      - 'scripts/**'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -40,6 +41,10 @@ jobs:
           cp overrides/main.html docs/overrides/main.html
           # Strip <div align="center"> wrapper so MkDocs renders the header markdown properly
           awk '/<div align="center">/{next} !done && /<\/div>/{done=1; next} 1' README.md > docs/index.md
+          # Generate SVG diagram from the At a Glance ASCII art
+          python3 scripts/generate-glance-svg.py README.md docs/at-a-glance.svg
+          # Inject SVG image into the svg-glance div for Pages
+          sed -i 's|<!-- SVG generated at build time for GitHub Pages; not visible on GitHub.com -->|<img src="at-a-glance.svg" alt="At a Glance" style="max-width:100%">|' docs/index.md
 
       - run: mkdocs build
 

@@ -24,6 +24,8 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
 
 ## At a Glance
 
+<div class="ascii-glance" markdown>
+
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │                                                                     │
@@ -67,6 +69,12 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
 ```
+
+</div>
+
+<div class="svg-glance">
+<!-- SVG generated at build time for GitHub Pages; not visible on GitHub.com -->
+</div>
 
 <div class="readme-toc" markdown>
 
