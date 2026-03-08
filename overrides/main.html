@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
-{% if page.meta.revision_date %}
+{% if page.meta.git_revision_date_localized %}
 <div class="last-updated-banner">
-  Last updated: {{ page.meta.revision_date }}
+  Last updated: {{ page.meta.git_revision_date_localized }}
 </div>
 {% endif %}
 {{ super() }}
