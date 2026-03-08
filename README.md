@@ -148,7 +148,7 @@ Override or refine rules for specific files or folders.
 │   └── tests.instructions.md            # applyTo: "**/*.test.ts"
 ```
 
-<details>
+<details markdown>
 <summary>Example — <code>backend.instructions.md</code></summary>
 
 ```markdown
@@ -179,7 +179,7 @@ Reusable task templates you invoke explicitly via `/` commands in chat.
 
 **📁 Location:** `.github/prompts/*.prompt.md`
 
-<details>
+<details markdown>
 <summary>Example — <code>new-endpoint.prompt.md</code></summary>
 
 ```markdown
@@ -210,7 +210,7 @@ Modular knowledge packages with a `SKILL.md` that Copilot loads on-demand when r
 
 **📁 Location:** `.github/skills/{skill-name}/SKILL.md`
 
-<details>
+<details markdown>
 <summary>Example — <code>drizzle-migrations/SKILL.md</code></summary>
 
 ```markdown
@@ -254,7 +254,7 @@ When creating or modifying database tables.
 
 **📁 Location:** `.vscode/mcp.json` (VS Code) or `~/.copilot/mcp-config.json` (CLI)
 
-<details>
+<details markdown>
 <summary>Example configuration</summary>
 
 ```jsonc
@@ -303,7 +303,7 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
 
 **📁 Location:** `.github/hooks/` (repo-level) or `~/.copilot/hooks/` (personal, user-level)
 
-<details>
+<details markdown>
 <summary>Example — repo-level <code>.github/hooks/hooks.json</code></summary>
 
 ```jsonc
@@ -355,7 +355,7 @@ A named agent with a persona, specific tools, and specialized behavior.
 
 **📁 Location:** `.github/agents/{name}.agent.md`
 
-<details>
+<details markdown>
 <summary>Example — <code>security-reviewer.agent.md</code></summary>
 
 ```markdown
@@ -393,7 +393,7 @@ Installable packages that bundle agents, skills, hooks, and MCP server configs i
 
 > **When you need it:** Your team has built a great set of agents, skills, hooks, and MCP configs. Instead of copying files between repos, you package them as a plugin that anyone can install.
 
-<details>
+<details markdown>
 <summary>Example structure</summary>
 
 ```
@@ -493,7 +493,7 @@ Each subagent gets its **own context window**, so individual subtask context doe
 
 Copilot will also auto-select custom agents when it determines they're a good fit.
 
-<details>
+<details markdown>
 <summary>Typical workflow — plan → fleet → autopilot</summary>
 
 1. Press **Shift+Tab** to switch into [plan mode](#autopilot-mode) and create an implementation plan.
@@ -518,7 +518,7 @@ Copilot will also auto-select custom agents when it determines they're a good fi
 
 You can wire parallel delegation into a reusable [prompt file](#prompt-files) by adding `agent` to the `tools` frontmatter. The agent then spawns child agents whenever the prompt instructions suggest isolated or parallel work.
 
-<details>
+<details markdown>
 <summary>Example — <code>review-feature.prompt.md</code></summary>
 
 ```markdown
@@ -580,7 +580,7 @@ Autopilot and `/fleet` are independent features that combine well. A common work
 2. Select **"Accept plan and build on autopilot + /fleet"**
 3. Copilot fans out subtasks to parallel subagents *and* continues autonomously
 
-<details>
+<details markdown>
 <summary>Key differences — autopilot vs <code>/fleet</code></summary>
 
 | | Autopilot | `/fleet` |
@@ -620,7 +620,7 @@ GitHub's autonomous agent that picks up issues, creates branches, and opens PRs 
 - **`copilot-setup-steps.yml`** in `.github/` — defines the agent's environment
 - **GitHub Actions** enabled
 
-<details>
+<details markdown>
 <summary>Example — <code>copilot-setup-steps.yml</code></summary>
 
 ```yaml
@@ -749,7 +749,7 @@ Per-repo persistent memory — Copilot automatically captures patterns, conventi
 - **Repo Settings → Copilot → Memory** — review and delete stored memories per repo
 - Repo owners can curate memories; automated validation handles the rest
 
-<details>
+<details markdown>
 <summary>Example: what a memory captures</summary>
 
 After a coding agent session where it learns that `src/api/` and `src/types/` must stay in sync:
@@ -821,7 +821,7 @@ npx squad init
 
 > **Note:** GitHub-native distribution (`npx github:bradygaster/squad`) has been removed. All distribution is now via npm. See the [Migration Guide](https://github.com/bradygaster/squad/blob/main/docs/get-started/migration.md) if upgrading from an older version.
 
-<details>
+<details markdown>
 <summary>What gets created</summary>
 
 ```
