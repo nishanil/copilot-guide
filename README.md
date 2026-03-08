@@ -1,3 +1,9 @@
+---
+layout: default
+title: Home
+nav_order: 1
+---
+
 <div align="center">
 
 # 🤖 Understanding GitHub Copilot
