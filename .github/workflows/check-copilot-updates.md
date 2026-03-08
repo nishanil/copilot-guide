@@ -63,14 +63,20 @@ If updates are needed, edit `README.md` following these conventions:
   - A `> **When you need it:**` callout
   - A concrete code or config example (preferably inside a `<details>` block if long)
   - A two-column summary table at the end
-- Use `<details>` / `<summary>` blocks to keep examples collapsible
+- Use `<details markdown>` / `<summary>` blocks to keep examples collapsible (the `markdown` attribute is required for MkDocs rendering)
 - Use "RecipeShare" app examples to stay consistent with the existing guide
 - Keep the Quick Reference table in sync when adding or removing features
-- Keep the At a Glance ASCII diagram in sync
-- Keep the Table of Contents in sync
+- Keep the At a Glance ASCII diagram in sync (inside the `<div class="ascii-glance" markdown>` wrapper)
+- Keep the Table of Contents in sync (inside the `<div class="readme-toc" markdown>` wrapper)
 - Add relevant docs/blog links to the Further Reading section
 - Do not reorder top-level sections
 - Do not remove or rename existing feature entries
+- Do not modify these structural HTML wrappers — they control GitHub Pages rendering:
+  - `<div align="center">` ... `</div>` (top header)
+  - `<div class="ascii-glance" markdown>` ... `</div>` (At a Glance code block)
+  - `<div class="svg-glance">` ... `</div>` (SVG placeholder for Pages)
+  - `<div class="readme-toc" markdown>` ... `</div>` (Table of Contents)
+  - `<p class="gh-pages-link">` ... `</p>` (Pages link, hidden on site)
 
 ## Step 4 — Open a pull request
 
