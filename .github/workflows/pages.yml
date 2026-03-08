@@ -23,21 +23,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - run: pip install mkdocs-material
+      - run: pip install mkdocs-material mkdocs-git-revision-date-localized-plugin
 
-      - name: Copy README as docs source
+      - name: Prepare docs source
         run: |
           mkdir -p docs/overrides
-          cp README.md docs/index.md
           cp overrides/extra.css docs/overrides/extra.css
           # Strip <div align="center"> wrapper so MkDocs renders the header markdown properly
-          sed -i 's/<div align="center">//' docs/index.md
-          sed -i 's/<\/div>//' docs/index.md
+          sed 's/<div align="center">//' README.md | sed 's/<\/div>//' > docs/index.md
 
       - run: mkdocs build --strict
 

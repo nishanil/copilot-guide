@@ -45,6 +45,10 @@ markdown_extensions:
 
 plugins:
   - search
+  - git-revision-date-localized:
+      enable_creation_date: false
+      type: timeago
+      fallback_to_build_date: true
 
 extra_css:
   - overrides/extra.css
