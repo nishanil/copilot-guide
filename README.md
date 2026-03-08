@@ -580,18 +580,6 @@ Autopilot and `/fleet` are independent features that combine well. A common work
 2. Select **"Accept plan and build on autopilot + /fleet"**
 3. Copilot fans out subtasks to parallel subagents *and* continues autonomously
 
-<details markdown>
-<summary>Key differences — autopilot vs <code>/fleet</code></summary>
-
-| | Autopilot | `/fleet` |
-|---|---|---|
-| **What it does** | Continues working without waiting for your input | Splits work across parallel subagents |
-| **Focus** | Autonomy (no back-and-forth) | Parallelism (faster completion) |
-| **Can be used alone** | Yes | Yes |
-| **Best together** | Large plans with many independent steps | |
-
-</details>
-
 | | |
 |---|---|
 | **Where** | Copilot CLI only (GA as of v1.0, March 2026) |
