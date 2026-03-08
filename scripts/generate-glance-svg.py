@@ -17,7 +17,7 @@ def parse_sections(readme_path):
     with open(readme_path) as f:
         content = f.read()
 
-    match = re.search(r'## At a Glance\s*```(.*?)```', content, re.DOTALL)
+    match = re.search(r'## At a Glance.*?```(.*?)```', content, re.DOTALL)
     if not match:
         print("ERROR: Could not find At a Glance section", file=sys.stderr)
         sys.exit(1)
