@@ -7,7 +7,7 @@
 .gh-pages-link { display: none; }
 
 /* Hide the inline Table of Contents — right sidebar TOC is sufficient on Pages */
-.readme-toc { display: none; }
+.readme-toc { display: none !important; }
 
 /* Top banner style */
 .last-updated-banner {

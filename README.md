@@ -68,9 +68,9 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
----
-
 <div class="readme-toc" markdown>
+
+---
 
 ## Table of Contents
 
@@ -101,9 +101,9 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
 - [Quick Reference](#quick-reference)
 - [Further Reading](#further-reading)
 
-</div>
-
 ---
+
+</div>
 
 ## Customization Features
 
