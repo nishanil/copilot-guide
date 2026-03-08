@@ -32,7 +32,7 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
 │  Prompt files        Reusable recipes for repeated tasks            │
 │  Skills              Packaged expertise, auto-loaded on demand      │
 │  MCP Servers         Connect to external tools, databases, APIs     │
-│  Hooks               Automate lifecycle events (format, lint, etc.) │
+│  Hooks               Automate lifecycle events (format, lint, startup) │
 │  Custom Agents       Named specialists with personas                │
 │  Plugins             Bundle all of the above into one package       │
 │                                                                     │
@@ -291,29 +291,33 @@ When creating or modifying database tables.
 | **Scope** | Available to all agents in the session |
 | **Discovery** | VS Code has a built-in MCP server gallery (search `@mcp` in Extensions) |
 | **Security** | Servers run locally — your credentials stay on your machine |
+| **OAuth / API keys** | MCP servers can request you to visit a URL for out-of-band auth flows (e.g. OAuth, API key entry) |
 
 ---
 
 ### Hooks
 
-Custom scripts that run automatically at specific lifecycle events — like pre-commit formatting, post-generation linting, or deployment triggers.
+Custom scripts that run automatically at specific lifecycle events — like pre-commit formatting, post-generation linting, or startup prompts.
 
 > **When you need it:** You want every code generation to be auto-formatted with Prettier, or every commit to run lint checks, without remembering to do it manually.
 
+**📁 Location:** `.github/hooks/` (repo-level) or `~/.copilot/hooks/` (personal, user-level)
+
 <details>
-<summary>Example configuration</summary>
+<summary>Example — repo-level <code>.github/hooks/hooks.json</code></summary>
 
 ```jsonc
-// .copilot/hooks.json
 {
   "hooks": {
     "post-edit": {
-      "command": "npx",
-      "args": ["prettier", "--write", "${file}"]
+      "command": "npx prettier --write ${file}"
     },
     "pre-commit": {
-      "command": "npm",
-      "args": ["run", "lint:fix"]
+      "command": "npm run lint:fix",
+      "timeout": 30
+    },
+    "startup": {
+      "prompt": "/compact Summarize recent changes in RecipeShare"
     }
   }
 }
@@ -321,9 +325,24 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
 
 </details>
 
+**Hook types:**
+
+| Event | Trigger |
+|---|---|
+| `post-edit` | After Copilot edits a file |
+| `pre-commit` | Before a git commit |
+| `startup` | When a CLI session starts — auto-submits a prompt or slash command |
+
+**Config notes:**
+
+- Use `"command"` as a **cross-platform alias** for `bash`/`powershell` shell commands — works on all platforms without separate entries
+- `"timeout"` is accepted as an alias for `"timeoutSec"` for readable config
+- Personal hooks (`~/.copilot/hooks/`) apply across all repos; repo-level hooks (`.github/hooks/`) are scoped to that repo
+
 | | |
 |---|---|
 | **Scope** | Runs automatically at lifecycle events — no manual invocation |
+| **Personal hooks** | `~/.copilot/hooks/` — applies to all repos on your machine |
 | **Difference from skills** | Skills are knowledge Copilot reads; hooks are scripts Copilot runs |
 
 ---
@@ -401,10 +420,22 @@ copilot plugin install github:myorg/recipeshare-toolkit
 copilot plugin list
 ```
 
+Enable plugins automatically at startup by listing them in your CLI config:
+
+```jsonc
+// ~/.copilot/settings.json
+{
+  "enabledPlugins": [
+    "github:myorg/recipeshare-toolkit"
+  ]
+}
+```
+
 | | |
 |---|---|
 | **Location** | Installed into `~/.copilot/plugins/` or project-local |
 | **Scope** | All bundled agents/skills/hooks/MCP become available |
+| **Auto-install** | List in `enabledPlugins` in `~/.copilot/settings.json` to install automatically at startup |
 | **Difference from skills** | A skill is one knowledge file; a plugin is a complete toolkit |
 
 ---
@@ -563,7 +594,7 @@ Autopilot and `/fleet` are independent features that combine well. A common work
 
 | | |
 |---|---|
-| **Where** | Copilot CLI only |
+| **Where** | Copilot CLI only (GA as of v1.0, March 2026) |
 | **Toggle** | Shift+Tab during a session, or `--autopilot` flag |
 | **Cost** | Each autonomous continuation step uses premium requests |
 | **Docs** | [Autopilot mode](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/autopilot) |
@@ -933,7 +964,7 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 | **Prompts** | Reusable task recipes | `.github/prompts/*.prompt.md` | When you repeat multi-step tasks |
 | **Skills** | Packaged domain knowledge | `.github/skills/{name}/SKILL.md` | When procedures are complex |
 | **MCP Servers** | External tool connections | `.vscode/mcp.json` | When agents need databases/APIs |
-| **Hooks** | Lifecycle automation | `.copilot/hooks.json` | When you want auto-formatting/linting |
+| **Hooks** | Lifecycle automation | `.github/hooks/` or `~/.copilot/hooks/` | When you want auto-formatting/linting/startup prompts |
 | **Agents** | Named specialist personas | `.github/agents/{name}.agent.md` | When you need dedicated workflow owners |
 | **Plugins** | Bundled agent toolkits | `plugin.json` manifest | When sharing agent setups across repos |
 | **Running Parallel Tasks / `/fleet`** | Auto-delegates or explicitly fans out work to subagents | *(runtime capability)* / `/fleet` slash command | When your request has multiple independent jobs |
@@ -966,14 +997,18 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 │       └── SKILL.md
 ├── agents/
 │   └── security-reviewer.agent.md       # Custom agents
+├── hooks/
+│   └── hooks.json                       # Repo-level lifecycle hooks
 └── workflows/
     └── ...
 
 .vscode/
 └── mcp.json                             # MCP server config
 
-.copilot/
-└── hooks.json                           # Lifecycle hooks
+~/.copilot/
+├── hooks/                               # Personal hooks (all repos)
+│   └── hooks.json
+└── settings.json                        # CLI user config (enabledPlugins, etc.)
 ```
 
 ---
@@ -988,6 +1023,9 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 
 **Blog Posts & Guides**
 - [Maximize Agentic Capabilities](https://github.blog/ai-and-ml/github-copilot/how-to-maximize-github-copilots-agentic-capabilities/) · [Mission Control](https://github.blog/changelog/2025-10-28-a-mission-control-to-assign-steer-and-track-copilot-coding-agent-tasks/) · [Agents vs Skills vs Instructions](https://github.com/orgs/community/discussions/183962) · [Agentic Workflows](https://github.blog/ai-and-ml/automate-repository-tasks-with-github-agentic-workflows/)
+
+**CLI Release Notes**
+- [GitHub Copilot CLI releases](https://github.com/github/copilot-cli/releases) — full changelog for every CLI version (v1.0+ is GA)
 
 **Platform**
 - [Copilot SDK](https://github.com/github/copilot-sdk) · [Copilot Spaces](https://docs.github.com/en/copilot/how-tos/provide-context/use-copilot-spaces)
