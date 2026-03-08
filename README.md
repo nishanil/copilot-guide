@@ -10,6 +10,8 @@ What each does · When you'd use it · How they fit together
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/nishanil/copilot-guide/pulls)
 
+📖 **[Read this guide on GitHub Pages](https://nishanil.github.io/copilot-guide/)** for a better reading experience.
+
 </div>
 
 ## Who is this guide for?
