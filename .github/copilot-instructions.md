@@ -18,7 +18,7 @@ This repository is a comprehensive reference guide documenting every GitHub Copi
   - A `📁 Location:` line (where applicable)
   - A concrete code or config example (preferably inside a `<details>` block if it is long)
   - A two-column summary table at the end of the section
-- Use `<details>` / `<summary>` blocks to keep examples collapsible and the page scannable
+- Use `<details markdown>` / `<summary>` blocks to keep examples collapsible and the page scannable (the `markdown` attribute is required for MkDocs rendering on GitHub Pages)
 - Feature names in prose should match their heading exactly (e.g. "Custom Instructions", "Copilot Coding Agent")
 - Link every external reference (docs, blog posts, repos) — no bare mentions without a URL
 
@@ -34,4 +34,14 @@ This repository is a comprehensive reference guide documenting every GitHub Copi
 
 - Do not reorder the top-level sections
 - Do not remove or rename existing feature entries
-- Do not convert `<details>` examples to inline code blocks — keeping them collapsible is intentional
+- Do not convert `<details markdown>` examples to inline code blocks — keeping them collapsible is intentional
+- Do not modify these structural HTML wrappers — they control GitHub Pages rendering:
+  - `<div align="center">` ... `</div>` (top header)
+  - `<div class="ascii-glance" markdown>` ... `</div>` (At a Glance code block)
+  - `<div class="svg-glance">` ... `</div>` (SVG placeholder for Pages)
+  - `<div class="readme-toc" markdown>` ... `</div>` (Table of Contents)
+  - `<p class="gh-pages-link">` ... `</p>` (Pages link, hidden on site)
+
+## Automated updates
+
+This guide is automatically checked for updates by an agentic workflow (`.github/workflows/check-copilot-updates.md`). It runs daily, checks official Copilot changelogs and community projects, and opens a PR if the guide needs updating. The GitHub Pages site at https://nishanil.github.io/copilot-guide/ is rebuilt automatically whenever `README.md` changes on `main`.
