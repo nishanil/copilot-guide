@@ -1,11 +1,14 @@
 .md-sidebar--primary .md-nav { display: none; }
 
-.md-source-file {
-  position: absolute;
-  top: 0;
-  right: 0;
+/* Hide the default bottom position */
+.md-source-file { display: none; }
+
+/* Top banner style */
+.last-updated-banner {
   font-size: 0.75rem;
-  margin: 0;
-  padding: 0;
-  border: none;
+  color: var(--md-default-fg-color--light);
+  text-align: right;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
 }

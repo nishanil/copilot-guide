@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% if page.meta.revision_date %}
+<div class="last-updated-banner">
+  Last updated: {{ page.meta.revision_date }}
+</div>
+{% endif %}
+{{ super() }}
+{% endblock %}

@@ -27,6 +27,7 @@ theme:
     - content.code.copy
     - toc.follow
     - navigation.instant
+  custom_dir: overrides
   icon:
     repo: fontawesome/brands/github
 
