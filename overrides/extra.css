@@ -1,8 +1,11 @@
 .md-sidebar--primary .md-nav { display: none; }
 
 .md-source-file {
-  font-size: 0.85rem;
-  margin-top: 1.5rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--md-default-fg-color--lightest);
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 0.75rem;
+  margin: 0;
+  padding: 0;
+  border: none;
 }
