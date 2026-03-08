@@ -26,6 +26,7 @@ theme:
     - search.suggest
     - content.code.copy
     - toc.follow
+    - navigation.instant
   icon:
     repo: fontawesome/brands/github
 
@@ -45,5 +46,8 @@ markdown_extensions:
 plugins:
   - search
 
+extra_css:
+  - overrides/extra.css
+
 nav:
-  - "": index.md
+  - index.md
