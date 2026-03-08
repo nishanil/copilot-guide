@@ -34,6 +34,9 @@ jobs:
         run: |
           mkdir -p docs
           cp README.md docs/index.md
+          # Strip <div align="center"> wrapper so MkDocs renders the header markdown properly
+          sed -i 's/<div align="center">//' docs/index.md
+          sed -i 's/<\/div>//' docs/index.md
 
       - run: mkdocs build --strict
 
