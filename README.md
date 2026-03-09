@@ -897,11 +897,6 @@ A curated collection of Copilot resources, customizations, and advanced patterns
 
 Includes custom instructions examples, agent patterns, orchestration strategies, MCP configs, community skills, and guides for maximizing agentic workflows. A great starting point for seeing how others use these features in practice.
 
-#### Notable recent additions
-
-- **napkin** — Visual whiteboard plugin: open an HTML canvas in your browser, sketch diagrams or sticky notes, click "Share with Copilot" to export a PNG snapshot, and the agent interprets your drawings conversationally. Built for non-technical users (PMs, designers, lawyers) who think visually. (`plugins/napkin`)
-- **cli-mastery** — Interactive CLI training skill with 8 modules covering slash commands, keyboard shortcuts, modes, agents, skills, MCP, and configuration. Includes scenario challenges, a final exam, and SQL-based XP/leveling progress tracking. (`skills/cli-mastery`)
-
 ---
 
 ## Best Practices
