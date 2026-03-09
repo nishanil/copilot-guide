@@ -812,9 +812,9 @@ npm install @github/copilot-sdk
 
 ### Squad
 
-A persistent team of AI agents with identity, memory, and parallel coordination — now with its own CLI, interactive shell, and SDK.
+A persistent team of AI agents with identity, memory, and parallel coordination — now with its own CLI, interactive shell, SDK, and community documentation site.
 
-**Repository:** [github.com/bradygaster/squad](https://github.com/bradygaster/squad)
+**Repository:** [github.com/bradygaster/squad](https://github.com/bradygaster/squad) · **Docs:** [bradygaster.github.io/squad](https://bradygaster.github.io/squad/)
 
 ```bash
 npm install --save-dev @bradygaster/squad-cli
@@ -891,7 +891,7 @@ Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issu
 
 ### awesome-copilot
 
-A curated collection of Copilot resources, customizations, and advanced patterns.
+A curated collection of Copilot resources, customizations, and advanced patterns — actively maintained, with community contributions reviewed daily.
 
 **Repository:** [github.com/github/awesome-copilot](https://github.com/github/awesome-copilot)
 
@@ -1033,7 +1033,7 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 - [Copilot SDK](https://github.com/github/copilot-sdk) · [Copilot Spaces](https://docs.github.com/en/copilot/how-tos/provide-context/use-copilot-spaces)
 
 **Community**
-- [awesome-copilot](https://github.com/github/awesome-copilot) · [Squad](https://github.com/bradygaster/squad)
+- [awesome-copilot](https://github.com/github/awesome-copilot) · [Squad](https://github.com/bradygaster/squad) · [Squad Docs](https://bradygaster.github.io/squad/)
 
 ---
 
