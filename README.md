@@ -39,6 +39,7 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
 │  Hooks               Automate lifecycle events (format, lint, startup) │
 │  Custom Agents       Named specialists with personas                │
 │  Plugins             Bundle all of the above into one package       │
+│  Extensions          Ask Copilot to write its own tools (experimental) │
 │                                                                     │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
@@ -91,6 +92,7 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
   - [Hooks](#hooks)
   - [Custom Agents](#custom-agents)
   - [Plugins](#plugins)
+  - [Extensions](#extensions)
 - [Agentic Features](#agentic-features)
   - [Running Parallel Tasks](#running-parallel-tasks)
   - [Autopilot Mode](#autopilot-mode)
@@ -266,7 +268,7 @@ When creating or modifying database tables.
 
 > **When you need it:** Your app needs to interact with other systems, ex: query PostgreSQL, check GitHub issues, or interact with cloud storage. Without MCP, you'd have to copy-paste data into chat.
 
-**📁 Location:** `.vscode/mcp.json` (VS Code) or `~/.copilot/mcp-config.json` (CLI)
+**📁 Location:** `.vscode/mcp.json` (VS Code), `~/.copilot/mcp-config.json` (CLI), or `.devcontainer/devcontainer.json` (dev containers)
 
 <details markdown>
 <summary>Example configuration</summary>
@@ -346,6 +348,13 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
 | `post-edit` | After Copilot edits a file |
 | `pre-commit` | Before a git commit |
 | `startup` | When a CLI session starts — auto-submits a prompt or slash command |
+
+Each hook action can carry an optional **`permission`** field:
+
+| Permission value | Behaviour |
+|---|---|
+| *(omitted)* | Hook runs silently without confirmation |
+| `"ask"` | Copilot pauses and asks the user to approve before running the hook command |
 
 **Config notes:**
 
@@ -451,6 +460,29 @@ Enable plugins automatically at startup by listing them in your CLI config:
 | **Scope** | All bundled agents/skills/hooks/MCP become available |
 | **Auto-install** | List in `enabledPlugins` in `~/.copilot/settings.json` to install automatically at startup |
 | **Difference from skills** | A skill is one knowledge file; a plugin is a complete toolkit |
+
+---
+
+### Extensions
+
+**(Experimental)** Self-extensibility for the Copilot CLI — ask Copilot to write and install new tools and hooks for itself in your current session, powered by the [`@github/copilot-sdk`](https://github.com/github/copilot-sdk).
+
+> **When you need it:** You want a custom tool that doesn't exist yet — but rather than writing it manually, you describe it to Copilot and it builds and registers it for you on the spot.
+
+```
+> "Write me a tool that calls our internal RecipeShare nutrition API and returns macros for a given recipe ID"
+```
+
+Copilot generates the tool using the SDK, installs it into the session, and it's immediately available for subsequent requests.
+
+> ⚠️ **Experimental** — Available in Copilot CLI v1.0.3+. Behavior may change before GA.
+
+| | |
+|---|---|
+| **Status** | Experimental (CLI v1.0.3+) |
+| **Where** | Copilot CLI only |
+| **Persistence** | Generated in-session; persisted as hooks/tools for later reuse |
+| **Difference from plugins** | Plugins are pre-authored packages; extensions are generated on-demand by Copilot |
 
 ---
 
@@ -818,7 +850,7 @@ A persistent team of AI agents with identity, memory, and parallel coordination 
 
 ```bash
 npm install --save-dev @bradygaster/squad-cli
-npx squad init
+npx squad init          # v0.8.25+
 ```
 
 > **Note:** GitHub-native distribution (`npx github:bradygaster/squad`) has been removed. All distribution is now via npm. See the [Migration Guide](https://github.com/bradygaster/squad/blob/main/docs/get-started/migration.md) if upgrading from an older version.
@@ -868,10 +900,13 @@ squad > /status
 
 Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issues), `squad copilot` (add/remove @copilot), `squad doctor`, `squad nap` (context hygiene), `squad export`/`import`, `squad aspire` (observability dashboard).
 
-#### What's new (v0.8.x)
+#### What's new (v0.8.22–v0.8.25)
 
-- **SubSquads** — break large teams into focused sub-groups (renamed from workstreams)
-- **Crash recovery** — sessions persist to disk; agents resume from checkpoint after failures
+- **SDK-first mode** — Define your team in TypeScript with typed builder functions (`defineTeam()`, `defineAgent()`, `defineRouting()`, `defineHooks()`, `defineSquad()`, etc.) and compile to `.squad/` markdown via `squad build`. Enables type-safe team configuration with runtime validation.
+- **`squad migrate` command** — Migrate from older `.ai-team/` structure to `.squad/`
+- **`squad link` command** — Link a project directory to a remote team root (`squad init --mode remote`)
+- **SubSquads** — Break large teams into focused sub-groups (renamed from workstreams)
+- **Crash recovery** — Sessions persist to disk; agents resume from checkpoint after failures
 - **Plugin marketplace** — `squad plugin marketplace add|browse|list`
 - **Azure DevOps adapter** — Squad for enterprise via `CommunicationAdapter`
 - **Upstream sources** — `squad upstream add|sync` to pull from shared squad configs
@@ -895,7 +930,7 @@ A curated collection of Copilot resources, customizations, and advanced patterns
 
 **Repository:** [github.com/github/awesome-copilot](https://github.com/github/awesome-copilot)
 
-Includes custom instructions examples, agent patterns, orchestration strategies, MCP configs, community skills, and guides for maximizing agentic workflows. A great starting point for seeing how others use these features in practice.
+Includes custom instructions examples, agent patterns, orchestration strategies, MCP configs, community skills, and guides for maximizing agentic workflows. The site now also surfaces **external community plugins** (flagged as 🔗 External) alongside built-in resources, making it easy to discover and share plugin toolkits from any GitHub repository. A great starting point for seeing how others use these features in practice.
 
 ---
 
@@ -969,6 +1004,7 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 | **Hooks** | Lifecycle automation | `.github/hooks/` or `~/.copilot/hooks/` | When you want auto-formatting/linting/startup prompts |
 | **Agents** | Named specialist personas | `.github/agents/{name}.agent.md` | When you need dedicated workflow owners |
 | **Plugins** | Bundled agent toolkits | `plugin.json` manifest | When sharing agent setups across repos |
+| **Extensions** | On-demand tool generation by Copilot | *(runtime, CLI only — experimental)* | When you need a custom tool and want Copilot to write it |
 | **Running Parallel Tasks / `/fleet`** | Auto-delegates or explicitly fans out work to subagents | *(runtime capability)* / `/fleet` slash command | When your request has multiple independent jobs |
 | **Autopilot Mode** | Hands-off autonomous task completion | Copilot CLI (`--autopilot` / Shift+Tab) | When you want Copilot to work to completion without interaction |
 | **Coding Agent** | Autonomous cloud agent | GitHub infrastructure | When you want async issue automation |
@@ -1027,13 +1063,13 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 - [Maximize Agentic Capabilities](https://github.blog/ai-and-ml/github-copilot/how-to-maximize-github-copilots-agentic-capabilities/) · [Mission Control](https://github.blog/changelog/2025-10-28-a-mission-control-to-assign-steer-and-track-copilot-coding-agent-tasks/) · [Agents vs Skills vs Instructions](https://github.com/orgs/community/discussions/183962) · [Agentic Workflows](https://github.blog/ai-and-ml/automate-repository-tasks-with-github-agentic-workflows/)
 
 **CLI Release Notes**
-- [GitHub Copilot CLI releases](https://github.com/github/copilot-cli/releases) — full changelog for every CLI version (v1.0+ is GA)
+- [GitHub Copilot CLI releases](https://github.com/github/copilot-cli/releases) — full changelog for every CLI version (v1.0+ is GA; v1.0.3 adds Extensions experimental feature)
 
 **Platform**
 - [Copilot SDK](https://github.com/github/copilot-sdk) · [Copilot Spaces](https://docs.github.com/en/copilot/how-tos/provide-context/use-copilot-spaces)
 
 **Community**
-- [awesome-copilot](https://github.com/github/awesome-copilot) · [Squad](https://github.com/bradygaster/squad) · [Squad Docs](https://bradygaster.github.io/squad/)
+- [awesome-copilot](https://github.com/github/awesome-copilot) · [Squad](https://github.com/bradygaster/squad) · [Squad Docs](https://bradygaster.github.io/squad/) · [Squad v0.8.24 — ADO, CommunicationAdapter & SubSquads](https://bradygaster.github.io/squad/blog/026-whats-new-ado-comms-subsquads.html)
 
 ---
 
