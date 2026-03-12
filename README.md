@@ -352,11 +352,26 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
 - Use `"command"` as a **cross-platform alias** for `bash`/`powershell` shell commands — works on all platforms without separate entries
 - `"timeout"` is accepted as an alias for `"timeoutSec"` for readable config
 - Personal hooks (`~/.copilot/hooks/`) apply across all repos; repo-level hooks (`.github/hooks/`) are scoped to that repo
+- Set `"permission": "ask"` on any hook command to have Copilot prompt you for approval before it runs — useful for destructive or sensitive operations
+- Use `"disableAllHooks": true` in your hooks config to temporarily disable all hooks without removing them
+
+```jsonc
+{
+  "hooks": {
+    "pre-commit": {
+      "command": "npm run db:migrate",
+      "permission": "ask"        // pause and ask before running
+    }
+  },
+  "disableAllHooks": false       // set true to mute all hooks temporarily
+}
+```
 
 | | |
 |---|---|
 | **Scope** | Runs automatically at lifecycle events — no manual invocation |
 | **Personal hooks** | `~/.copilot/hooks/` — applies to all repos on your machine |
+| **Permission control** | `"permission": "ask"` requests confirmation before execution |
 | **Difference from skills** | Skills are knowledge Copilot reads; hooks are scripts Copilot runs |
 
 ---
@@ -393,6 +408,8 @@ Output format: list findings as HIGH/MEDIUM/LOW with file:line references.
 </details>
 
 **Usage:** Select "Security Reviewer" from `/agents` in Copilot. It's a separate selectable agent, not always-on.
+
+> 💡 The CLI ships a built-in **`configure-copilot`** sub-agent (invokable via the `task` tool) that can help you set up MCP servers, create custom agents, and manage skills — useful when bootstrapping a new repo's Copilot config.
 
 | | |
 |---|---|
@@ -568,6 +585,9 @@ The CLI's **autopilot mode** lets Copilot work autonomously through a multi-step
 
 ```bash
 copilot --autopilot --yolo --max-autopilot-continues 10 -p "Add input validation to all RecipeShare API endpoints"
+
+# Control reasoning depth (tradeoff: quality vs speed/cost)
+copilot --autopilot --reasoning-effort high -p "Refactor the authentication module"
 ```
 
 Copilot continues autonomously until one of these happens:
@@ -598,6 +618,7 @@ Autopilot and `/fleet` are independent features that combine well. A common work
 |---|---|
 | **Where** | Copilot CLI only (GA as of v1.0, March 2026) |
 | **Toggle** | Shift+Tab during a session, or `--autopilot` flag |
+| **Reasoning** | `--reasoning-effort low\|medium\|high` to tune quality vs speed/cost |
 | **Cost** | Each autonomous continuation step uses premium requests |
 | **Docs** | [Autopilot mode](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/autopilot) |
 
@@ -866,10 +887,12 @@ squad > Build the login page
 squad > /status
 ```
 
-Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issues), `squad copilot` (add/remove @copilot), `squad doctor`, `squad nap` (context hygiene), `squad export`/`import`, `squad aspire` (observability dashboard).
+Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issues), `squad copilot` (add/remove @copilot), `squad doctor`, `squad nap` (context hygiene), `squad export`/`import`, `squad aspire` (observability dashboard), `squad build` (compile SDK definitions to markdown), `squad migrate` (migrate team config), `squad link` (link a project to a remote team root), `squad rc` (remote control / ACP passthrough).
 
-#### What's new (v0.8.x)
+#### What's new (v0.8.21–v0.8.25)
 
+- **SDK-First mode** — define your entire team as type-safe TypeScript using builder functions (`defineTeam()`, `defineAgent()`, `defineRouting()`, `defineCeremony()`, etc.), then compile to `.squad/` markdown with `squad build`. Protected files (decisions.md, history.md) are never overwritten.
+- **Remote Squad Mode** — `squad init --mode remote` lets a project link to a shared team identity directory. Use `squad link <path>` to connect and `squad doctor` (9-check validation) to verify setup.
 - **SubSquads** — break large teams into focused sub-groups (renamed from workstreams)
 - **Crash recovery** — sessions persist to disk; agents resume from checkpoint after failures
 - **Plugin marketplace** — `squad plugin marketplace add|browse|list`
@@ -877,6 +900,7 @@ Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issu
 - **Upstream sources** — `squad upstream add|sync` to pull from shared squad configs
 - **Context hygiene** — `squad nap --deep` to compress and prune accumulated context
 - **Ralph** — event-driven monitoring agent that watches all agent activity
+- **Node 24+ compatibility** — ESM runtime fix for GitHub Codespaces and other Node 24 environments
 
 | | Vanilla Custom Agent | Squad |
 |---|---|---|
@@ -896,6 +920,12 @@ A curated collection of Copilot resources, customizations, and advanced patterns
 **Repository:** [github.com/github/awesome-copilot](https://github.com/github/awesome-copilot)
 
 Includes custom instructions examples, agent patterns, orchestration strategies, MCP configs, community skills, and guides for maximizing agentic workflows. A great starting point for seeing how others use these features in practice.
+
+**Notable recent community contributions:**
+
+- **`doublecheck` plugin** — a three-layer verification pipeline (self-audit → web source check → adversarial review) for AI-generated content, with confidence ratings (VERIFIED, PLAUSIBLE, UNVERIFIED, DISPUTED, FABRICATION RISK). Auto-escalates to full report for legal, medical, or regulatory content. Install: `copilot plugin install github:github/awesome-copilot` and select the `doublecheck` plugin.
+- **`cloud-design-patterns` skill** — auto-loads distributed systems architecture guidance (reliability, resilience, scalability patterns) when working on backend or infrastructure code.
+- **Groundhog Day tool** — autonomous backup agent that watches, syncs, and pushes skill changes to GitHub in real time; survives reboots with one-line install.
 
 ---
 
