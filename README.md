@@ -39,6 +39,7 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
 │  Hooks               Automate lifecycle events (format, lint, startup) │
 │  Custom Agents       Named specialists with personas                │
 │  Plugins             Bundle all of the above into one package       │
+│  Extensions          Custom tools & hooks via @github/copilot-sdk   │
 │                                                                     │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
@@ -47,6 +48,7 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
 │  Running Parallel    Auto-delegates work; /fleet for explicit        │
 │    Tasks & /fleet    parallel execution via subagents                │
 │  Autopilot Mode      Hands-off autonomous task completion (CLI)     │
+│  /pr Agent           Create PRs, fix CI, address review in CLI      │
 │  Coding Agent        Autonomous cloud agent — issues in, PRs out    │
 │  Agentic Workflows   Automate repo tasks via GitHub Actions + AI    │
 │  Mission Control     Dashboard to manage coding agents at scale     │
@@ -91,9 +93,11 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
   - [Hooks](#hooks)
   - [Custom Agents](#custom-agents)
   - [Plugins](#plugins)
+  - [CLI Extensions](#cli-extensions)
 - [Agentic Features](#agentic-features)
   - [Running Parallel Tasks](#running-parallel-tasks)
   - [Autopilot Mode](#autopilot-mode)
+  - [/pr — PR Lifecycle Agent](#pr--pr-lifecycle-agent)
   - [Copilot Coding Agent](#copilot-coding-agent)
   - [Agentic Workflows](#agentic-workflows)
   - [Mission Control](#mission-control)
@@ -266,7 +270,7 @@ When creating or modifying database tables.
 
 > **When you need it:** Your app needs to interact with other systems, ex: query PostgreSQL, check GitHub issues, or interact with cloud storage. Without MCP, you'd have to copy-paste data into chat.
 
-**📁 Location:** `.vscode/mcp.json` (VS Code) or `~/.copilot/mcp-config.json` (CLI)
+**📁 Location:** `.vscode/mcp.json` (VS Code) · `~/.copilot/mcp-config.json`, `.devcontainer/devcontainer.json`, or `.vscode/mcp.json` (CLI)
 
 <details markdown>
 <summary>Example configuration</summary>
@@ -346,12 +350,15 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
 | `post-edit` | After Copilot edits a file |
 | `pre-commit` | Before a git commit |
 | `startup` | When a CLI session starts — auto-submits a prompt or slash command |
+| `preCompact` | Runs before context compaction — useful for summarizing or saving state first |
 
 **Config notes:**
 
 - Use `"command"` as a **cross-platform alias** for `bash`/`powershell` shell commands — works on all platforms without separate entries
 - `"timeout"` is accepted as an alias for `"timeoutSec"` for readable config
 - Personal hooks (`~/.copilot/hooks/`) apply across all repos; repo-level hooks (`.github/hooks/`) are scoped to that repo
+- Add `"disableAllHooks": true` to a hooks config file to disable all hooks in that file
+- Set `"permission": "ask"` on a hook to prompt the user for confirmation before the hook runs
 
 | | |
 |---|---|
@@ -451,6 +458,43 @@ Enable plugins automatically at startup by listing them in your CLI config:
 | **Scope** | All bundled agents/skills/hooks/MCP become available |
 | **Auto-install** | List in `enabledPlugins` in `~/.copilot/settings.json` to install automatically at startup |
 | **Difference from skills** | A skill is one knowledge file; a plugin is a complete toolkit |
+
+---
+
+### CLI Extensions
+
+Experimental feature for writing custom tools and hooks in JavaScript/TypeScript against the `@github/copilot-sdk` API — extending the CLI with capabilities beyond the built-in tool set.
+
+> **When you need it:** You need a custom tool that isn't covered by built-in tools or MCP servers — for example, a company-specific deployment checker, a project-aware linter runner, or a tool Copilot can call to interact with internal systems.
+
+**Manage extensions in-session:**
+
+```
+/extensions          # List loaded extensions and their status
+/extensions enable   # Enable a specific extension
+/extensions disable  # Disable a specific extension
+```
+
+Extensions can be written as `.js` or `.cjs` modules. Copilot can write extensions for itself — prompt it to create a custom tool using `@github/copilot-sdk`.
+
+<details markdown>
+<summary>Example — asking Copilot to create an extension</summary>
+
+```
+> Write me a CLI extension that checks whether all RecipeShare API routes have
+  corresponding OpenAPI spec entries. Use @github/copilot-sdk.
+```
+
+Copilot will scaffold the extension file and register it so it's available as a tool in the current session.
+
+</details>
+
+| | |
+|---|---|
+| **Status** | Experimental (v1.0.3+) |
+| **Format** | `.js` or `.cjs` modules using `@github/copilot-sdk` |
+| **Manage** | `/extensions` command to view, enable, and disable |
+| **Difference from plugins** | Extensions add new *tool types*; plugins bundle existing artifacts (agents, skills, hooks, MCP) |
 
 ---
 
@@ -600,6 +644,28 @@ Autopilot and `/fleet` are independent features that combine well. A common work
 | **Toggle** | Shift+Tab during a session, or `--autopilot` flag |
 | **Cost** | Each autonomous continuation step uses premium requests |
 | **Docs** | [Autopilot mode](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/autopilot) |
+
+---
+
+### `/pr` — PR Lifecycle Agent
+
+The `/pr` slash command turns Copilot into a pull-request assistant: create PRs, view status, fix failing CI, address reviewer comments, and resolve merge conflicts — all without leaving the CLI.
+
+> **When you need it:** You want to stay in flow while working on a PR — let Copilot diagnose a failing CI check and push a fix, or automatically apply reviewer suggestions, instead of context-switching to the browser.
+
+```
+> /pr                     # Summarize current PR status
+> /pr view                # View PR status in the terminal
+> /pr view web            # Open PR in the browser
+```
+
+Copilot can take autonomous actions on your PR — running tests, pushing commits to fix CI failures, and applying review feedback — combining with [Autopilot Mode](#autopilot-mode) for fully hands-off PR resolution.
+
+| | |
+|---|---|
+| **Where** | Copilot CLI (v1.0.5+) |
+| **Actions** | Create · view · fix CI failures · address review feedback · resolve merge conflicts |
+| **Related** | [Coding Agent](#copilot-coding-agent) for cloud-based, asynchronous PR creation |
 
 ---
 
@@ -868,7 +934,7 @@ squad > /status
 
 Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issues), `squad copilot` (add/remove @copilot), `squad doctor`, `squad nap` (context hygiene), `squad export`/`import`, `squad aspire` (observability dashboard).
 
-#### What's new (v0.8.x)
+#### What's new (v0.8.25)
 
 - **SubSquads** — break large teams into focused sub-groups (renamed from workstreams)
 - **Crash recovery** — sessions persist to disk; agents resume from checkpoint after failures
@@ -969,8 +1035,10 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 | **Hooks** | Lifecycle automation | `.github/hooks/` or `~/.copilot/hooks/` | When you want auto-formatting/linting/startup prompts |
 | **Agents** | Named specialist personas | `.github/agents/{name}.agent.md` | When you need dedicated workflow owners |
 | **Plugins** | Bundled agent toolkits | `plugin.json` manifest | When sharing agent setups across repos |
+| **CLI Extensions** | Custom tools & hooks via SDK | `.js`/`.cjs` modules using `@github/copilot-sdk` | When you need custom tools beyond built-ins or MCP |
 | **Running Parallel Tasks / `/fleet`** | Auto-delegates or explicitly fans out work to subagents | *(runtime capability)* / `/fleet` slash command | When your request has multiple independent jobs |
 | **Autopilot Mode** | Hands-off autonomous task completion | Copilot CLI (`--autopilot` / Shift+Tab) | When you want Copilot to work to completion without interaction |
+| **`/pr` Agent** | CLI PR assistant — create, fix CI, address feedback | `/pr` slash command (CLI v1.0.5+) | When working on PRs without leaving the terminal |
 | **Coding Agent** | Autonomous cloud agent | GitHub infrastructure | When you want async issue automation |
 | **Agentic Workflows** | AI + GitHub Actions automation | GitHub Actions | When you want automated repo maintenance |
 | **Mission Control** | Multi-agent dashboard | GitHub.com / VS Code | When managing agents at scale |
@@ -1027,7 +1095,7 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 - [Maximize Agentic Capabilities](https://github.blog/ai-and-ml/github-copilot/how-to-maximize-github-copilots-agentic-capabilities/) · [Mission Control](https://github.blog/changelog/2025-10-28-a-mission-control-to-assign-steer-and-track-copilot-coding-agent-tasks/) · [Agents vs Skills vs Instructions](https://github.com/orgs/community/discussions/183962) · [Agentic Workflows](https://github.blog/ai-and-ml/automate-repository-tasks-with-github-agentic-workflows/)
 
 **CLI Release Notes**
-- [GitHub Copilot CLI releases](https://github.com/github/copilot-cli/releases) — full changelog for every CLI version (v1.0+ is GA)
+- [GitHub Copilot CLI releases](https://github.com/github/copilot-cli/releases) — full changelog for every CLI version (v1.0+ is GA; v1.0.5 adds `/pr`, `/extensions`, `preCompact` hook)
 
 **Platform**
 - [Copilot SDK](https://github.com/github/copilot-sdk) · [Copilot Spaces](https://docs.github.com/en/copilot/how-tos/provide-context/use-copilot-spaces)
