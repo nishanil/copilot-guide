@@ -47,6 +47,7 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
 │  Running Parallel    Auto-delegates work; /fleet for explicit        │
 │    Tasks & /fleet    parallel execution via subagents                │
 │  Autopilot Mode      Hands-off autonomous task completion (CLI)     │
+│  /pr Command         Create PRs, fix CI, address review from CLI    │
 │  Coding Agent        Autonomous cloud agent — issues in, PRs out    │
 │  Agentic Workflows   Automate repo tasks via GitHub Actions + AI    │
 │  Mission Control     Dashboard to manage coding agents at scale     │
@@ -94,6 +95,7 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
 - [Agentic Features](#agentic-features)
   - [Running Parallel Tasks](#running-parallel-tasks)
   - [Autopilot Mode](#autopilot-mode)
+  - [/pr Command](#pr-command)
   - [Copilot Coding Agent](#copilot-coding-agent)
   - [Agentic Workflows](#agentic-workflows)
   - [Mission Control](#mission-control)
@@ -346,6 +348,7 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
 | `post-edit` | After Copilot edits a file |
 | `pre-commit` | Before a git commit |
 | `startup` | When a CLI session starts — auto-submits a prompt or slash command |
+| `preCompact` | Before context compaction starts — run cleanup or checkpointing commands |
 
 **Config notes:**
 
@@ -600,6 +603,59 @@ Autopilot and `/fleet` are independent features that combine well. A common work
 | **Toggle** | Shift+Tab during a session, or `--autopilot` flag |
 | **Cost** | Each autonomous continuation step uses premium requests |
 | **Docs** | [Autopilot mode](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/autopilot) |
+
+---
+
+### /pr Command
+
+The **`/pr`** slash command lets you create, view, and manage pull requests directly from a CLI session — and can autonomously fix CI failures, address review feedback, and resolve merge conflicts.
+
+> **When you need it:** You want to open a PR without leaving the terminal, or you have a PR where CI is failing and you want Copilot to diagnose and fix it automatically.
+
+#### What `/pr` can do
+
+```
+> /pr                          # View the current branch's PR status
+> /pr view                     # View PR details in the terminal
+> /pr view web                 # Open the PR in the browser
+```
+
+When CI is failing on your PR, `/pr` detects the failures and automatically applies fixes:
+
+```
+> /pr
+  ✗  CI failed: 3 tests failing in RecipeShare API
+  → Diagnosing failures...
+  → Patching src/server/routes/recipes.ts
+  → Re-running affected tests... ✓
+```
+
+When reviewers have left comments, Copilot reads and addresses them:
+
+```
+> /pr
+  💬  3 unresolved review comments
+  → Addressing: "Add input validation for recipe title"
+  → Addressing: "Missing rate limiting on POST /recipes"
+  → Creating follow-up commit...
+```
+
+<details markdown>
+<summary>Typical workflow</summary>
+
+1. Work on a feature branch in an interactive CLI session
+2. Run `/pr` to create the PR — Copilot generates a title and description from your changes
+3. CI runs; if it fails, run `/pr` again and Copilot diagnoses and fixes the failures
+4. When reviewers comment, run `/pr` to automatically address their feedback
+
+</details>
+
+| | |
+|---|---|
+| **Where** | Copilot CLI (v1.0.5+) |
+| **Works with** | GitHub PRs on the current repo |
+| **Autonomous fixes** | CI failures, review comments, merge conflicts |
+| **Docs** | [GitHub Copilot CLI releases](https://github.com/github/copilot-cli/releases/tag/v1.0.5) |
 
 ---
 
@@ -866,10 +922,12 @@ squad > Build the login page
 squad > /status
 ```
 
-Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issues), `squad copilot` (add/remove @copilot), `squad doctor`, `squad nap` (context hygiene), `squad export`/`import`, `squad aspire` (observability dashboard).
+Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issues), `squad copilot` (add/remove @copilot), `squad doctor`, `squad nap` (context hygiene), `squad export`/`import`, `squad aspire` (observability dashboard), `squad build` (compile SDK config to `.squad/`), `squad migrate` (migrate between versions), `squad link` (link a project to a remote team root).
 
-#### What's new (v0.8.x)
+#### What's new (v0.8.21–0.8.25)
 
+- **SDK-First mode** — Define your team as TypeScript code with `defineTeam()`, `defineAgent()`, `defineRouting()`, etc., then compile to `.squad/` with `squad build`. Type-safe team configuration with runtime validation.
+- **Remote Squad Mode** — Shared team identity across repos: `squad init --mode remote`, `squad link <path>`, `squad doctor` (9-check setup validation).
 - **SubSquads** — break large teams into focused sub-groups (renamed from workstreams)
 - **Crash recovery** — sessions persist to disk; agents resume from checkpoint after failures
 - **Plugin marketplace** — `squad plugin marketplace add|browse|list`
@@ -877,6 +935,36 @@ Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issu
 - **Upstream sources** — `squad upstream add|sync` to pull from shared squad configs
 - **Context hygiene** — `squad nap --deep` to compress and prune accumulated context
 - **Ralph** — event-driven monitoring agent that watches all agent activity
+
+<details markdown>
+<summary>SDK-First example — defining a team as TypeScript</summary>
+
+```typescript
+import { defineSquad, defineTeam, defineAgent, defineRouting } from '@bradygaster/squad-sdk';
+
+export default defineSquad({
+  team: defineTeam({
+    name: 'RecipeShare Squad',
+    project: 'A recipe sharing platform built with React 19 + Hono',
+    members: ['Keaton', 'McManus', 'Verbal', 'Fenster'],
+  }),
+  agents: [
+    defineAgent({ name: 'Keaton', role: 'Lead', model: 'claude-sonnet-4.6' }),
+    defineAgent({ name: 'McManus', role: 'Frontend', model: 'gpt-4.1' }),
+    defineAgent({ name: 'Verbal', role: 'Backend', model: 'claude-sonnet-4.6' }),
+    defineAgent({ name: 'Fenster', role: 'Tester', model: 'gpt-5-mini' }),
+  ],
+  routing: defineRouting([
+    { pattern: 'src/client/**', assign: 'McManus' },
+    { pattern: 'src/server/**', assign: 'Verbal' },
+    { pattern: '**/*.test.*', assign: 'Fenster' },
+  ]),
+});
+```
+
+Run `squad build` to compile this to `.squad/` markdown files.
+
+</details>
 
 | | Vanilla Custom Agent | Squad |
 |---|---|---|
@@ -971,6 +1059,7 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 | **Plugins** | Bundled agent toolkits | `plugin.json` manifest | When sharing agent setups across repos |
 | **Running Parallel Tasks / `/fleet`** | Auto-delegates or explicitly fans out work to subagents | *(runtime capability)* / `/fleet` slash command | When your request has multiple independent jobs |
 | **Autopilot Mode** | Hands-off autonomous task completion | Copilot CLI (`--autopilot` / Shift+Tab) | When you want Copilot to work to completion without interaction |
+| **`/pr` Command** | Create PRs, fix CI failures, address review feedback | Copilot CLI (`/pr` slash command) | When managing PRs from the terminal |
 | **Coding Agent** | Autonomous cloud agent | GitHub infrastructure | When you want async issue automation |
 | **Agentic Workflows** | AI + GitHub Actions automation | GitHub Actions | When you want automated repo maintenance |
 | **Mission Control** | Multi-agent dashboard | GitHub.com / VS Code | When managing agents at scale |
@@ -1028,6 +1117,7 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 
 **CLI Release Notes**
 - [GitHub Copilot CLI releases](https://github.com/github/copilot-cli/releases) — full changelog for every CLI version (v1.0+ is GA)
+- [v1.0.5 release notes](https://github.com/github/copilot-cli/releases/tag/v1.0.5) — `/pr` command, `/extensions`, `preCompact` hook, and more
 
 **Platform**
 - [Copilot SDK](https://github.com/github/copilot-sdk) · [Copilot Spaces](https://docs.github.com/en/copilot/how-tos/provide-context/use-copilot-spaces)
