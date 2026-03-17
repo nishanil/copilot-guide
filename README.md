@@ -36,7 +36,7 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
 │  Prompt files        Reusable recipes for repeated tasks            │
 │  Skills              Packaged expertise, auto-loaded on demand      │
 │  MCP Servers         Connect to external tools, databases, APIs     │
-│  Hooks               Automate lifecycle events (format, lint, startup) │
+│  Hooks               Lifecycle events (format, lint, startup, agents)  │
 │  Custom Agents       Named specialists with personas                │
 │  Plugins             Bundle all of the above into one package       │
 │                                                                     │
@@ -47,6 +47,7 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
 │  Running Parallel    Auto-delegates work; /fleet for explicit        │
 │    Tasks & /fleet    parallel execution via subagents                │
 │  Autopilot Mode      Hands-off autonomous task completion (CLI)     │
+│  /pr Command         Create, fix CI, and address PR reviews (CLI)   │
 │  Coding Agent        Autonomous cloud agent — issues in, PRs out    │
 │  Agentic Workflows   Automate repo tasks via GitHub Actions + AI    │
 │  Mission Control     Dashboard to manage coding agents at scale     │
@@ -94,6 +95,7 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
 - [Agentic Features](#agentic-features)
   - [Running Parallel Tasks](#running-parallel-tasks)
   - [Autopilot Mode](#autopilot-mode)
+  - [The /pr Command](#the-pr-command)
   - [Copilot Coding Agent](#copilot-coding-agent)
   - [Agentic Workflows](#agentic-workflows)
   - [Mission Control](#mission-control)
@@ -332,6 +334,12 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
     },
     "startup": {
       "prompt": "/compact Summarize recent changes in RecipeShare"
+    },
+    "preCompact": {
+      "command": "npm run export-session-notes"
+    },
+    "subagentStart": {
+      "prompt": "You are working inside the RecipeShare project. Always check .github/copilot-instructions.md before starting."
     }
   }
 }
@@ -346,6 +354,8 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
 | `post-edit` | After Copilot edits a file |
 | `pre-commit` | Before a git commit |
 | `startup` | When a CLI session starts — auto-submits a prompt or slash command |
+| `preCompact` | Before context compaction starts — run cleanup or export state |
+| `subagentStart` | When a subagent is spawned — inject additional context into the subagent's prompt |
 
 **Config notes:**
 
@@ -376,6 +386,7 @@ A named agent with a persona, specific tools, and specialized behavior.
 ---
 name: Security Reviewer
 description: Reviews code for security vulnerabilities
+user-invocable: true
 ---
 You are a security-focused code reviewer for RecipeShare.
 
@@ -397,6 +408,7 @@ Output format: list findings as HIGH/MEDIUM/LOW with file:line references.
 | | |
 |---|---|
 | **Scope** | Explicitly selected by the user — not auto-loaded |
+| **Invocation options** | `user-invocable: true` (default) — agent appears in `/agents` for manual selection; `disable-model-invocation: true` — prevents the model from auto-invoking the agent |
 | **Difference from instructions** | Agents are interactive personas; instructions are passive context |
 
 ---
@@ -603,6 +615,36 @@ Autopilot and `/fleet` are independent features that combine well. A common work
 
 ---
 
+### The /pr Command
+
+A CLI slash command that autonomously manages pull requests — create PRs from your current branch, fix failing CI checks, address reviewer comments, and resolve merge conflicts without leaving the terminal.
+
+> **When you need it:** You want to go from local commits to a PR — or fix CI failures and respond to reviewer feedback — without switching to GitHub.com.
+
+```
+# Create a PR from the current branch
+> /pr
+
+# Fix a failing CI check on the open PR
+> /pr The deploy job is failing with a missing env var
+
+# Address reviewer feedback
+> /pr The reviewer wants better error handling in the auth route
+
+# Resolve a merge conflict
+> /pr Resolve the merge conflict in src/server/routes/recipes.ts
+```
+
+Copilot reads the current branch, open PR, CI logs, and reviewer comments — then makes changes autonomously and pushes to the PR branch.
+
+| | |
+|---|---|
+| **Where** | Copilot CLI only (added in v1.0.5) |
+| **What it does** | Create PR, fix CI, address review comments, resolve merge conflicts |
+| **Docs** | [CLI releases v1.0.5](https://github.com/github/copilot-cli/releases/tag/v1.0.5) |
+
+---
+
 ### Copilot Coding Agent
 
 GitHub's autonomous agent that picks up issues, creates branches, and opens PRs — **without a chat session**. It runs on GitHub's cloud infrastructure, not your machine.
@@ -797,10 +839,26 @@ Programmatic access to Copilot's capabilities in **Node.js**, **Python**, **Go**
 npm install @github/copilot-sdk
 ```
 
+Experimental session APIs (v1.0.7+) allow you to introspect and manage the CLI session programmatically:
+
+```typescript
+import { getSession } from "@github/copilot-sdk";
+
+const session = await getSession();
+
+// Discover available skills, MCP servers, and plugins
+const skills = await session.listSkills();
+const mcpServers = await session.listMcpServers();
+const plugins = await session.listPlugins();
+```
+
+The session APIs support optional **config auto-discovery** from the working directory, so they pick up `.github/skills/`, `.vscode/mcp.json`, and installed plugins automatically.
+
 | | |
 |---|---|
 | **Status** | Technical preview |
 | **Languages** | Node.js, Python, Go, .NET |
+| **Session APIs** | Experimental (v1.0.7+): list/manage skills, MCP servers, plugins with auto-discovery |
 | **Repository** | [github.com/github/copilot-sdk](https://github.com/github/copilot-sdk) |
 | **Difference from agents** | Agents are markdown prompts; SDK is programmatic code |
 
@@ -971,6 +1029,7 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 | **Plugins** | Bundled agent toolkits | `plugin.json` manifest | When sharing agent setups across repos |
 | **Running Parallel Tasks / `/fleet`** | Auto-delegates or explicitly fans out work to subagents | *(runtime capability)* / `/fleet` slash command | When your request has multiple independent jobs |
 | **Autopilot Mode** | Hands-off autonomous task completion | Copilot CLI (`--autopilot` / Shift+Tab) | When you want Copilot to work to completion without interaction |
+| **`/pr` Command** | Create PRs, fix CI failures, address review feedback | Copilot CLI (`/pr` slash command) | When managing PRs from the terminal |
 | **Coding Agent** | Autonomous cloud agent | GitHub infrastructure | When you want async issue automation |
 | **Agentic Workflows** | AI + GitHub Actions automation | GitHub Actions | When you want automated repo maintenance |
 | **Mission Control** | Multi-agent dashboard | GitHub.com / VS Code | When managing agents at scale |
