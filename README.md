@@ -306,6 +306,7 @@ When creating or modifying database tables.
 | **Discovery** | VS Code has a built-in MCP server gallery (search `@mcp` in Extensions) |
 | **Security** | Servers run locally — your credentials stay on your machine |
 | **OAuth / API keys** | MCP servers can request you to visit a URL for out-of-band auth flows (e.g. OAuth, API key entry) |
+| **Registry validation** | Enable the experimental `MCP_ALLOWLIST` feature flag to validate servers against configured registries before they are loaded |
 
 ---
 
@@ -315,7 +316,7 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
 
 > **When you need it:** You want every code generation to be auto-formatted with Prettier, or every commit to run lint checks, without remembering to do it manually.
 
-**📁 Location:** `.github/hooks/` (repo-level) or `~/.copilot/hooks/` (personal, user-level)
+**📁 Location:** `.github/hooks/` (repo-level) or `~/.copilot/hooks/` (personal, user-level). Hooks can also be defined inline in `settings.json`, `settings.local.json`, or `config.json`.
 
 <details markdown>
 <summary>Example — repo-level <code>.github/hooks/hooks.json</code></summary>
@@ -332,6 +333,9 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
     },
     "startup": {
       "prompt": "/compact Summarize recent changes in RecipeShare"
+    },
+    "subagentStart": {
+      "prompt": "You are working on RecipeShare. Always check CONTRIBUTING.md before making changes."
     }
   }
 }
@@ -346,17 +350,20 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
 | `post-edit` | After Copilot edits a file |
 | `pre-commit` | Before a git commit |
 | `startup` | When a CLI session starts — auto-submits a prompt or slash command |
+| `subagentStart` | When a subagent is spawned — injects additional context into the subagent's prompt |
 
 **Config notes:**
 
 - Use `"command"` as a **cross-platform alias** for `bash`/`powershell` shell commands — works on all platforms without separate entries
 - `"timeout"` is accepted as an alias for `"timeoutSec"` for readable config
 - Personal hooks (`~/.copilot/hooks/`) apply across all repos; repo-level hooks (`.github/hooks/`) are scoped to that repo
+- Hooks can also be defined directly in `settings.json`, `settings.local.json`, or `config.json` under a `"hooks"` key — useful for user-level overrides without a separate file
 
 | | |
 |---|---|
 | **Scope** | Runs automatically at lifecycle events — no manual invocation |
 | **Personal hooks** | `~/.copilot/hooks/` — applies to all repos on your machine |
+| **`subagentStart`** | New in v1.0.7 — fires when a `/fleet` subagent is spawned; use to inject project-wide context |
 | **Difference from skills** | Skills are knowledge Copilot reads; hooks are scripts Copilot runs |
 
 ---
@@ -802,6 +809,7 @@ npm install @github/copilot-sdk
 | **Status** | Technical preview |
 | **Languages** | Node.js, Python, Go, .NET |
 | **Repository** | [github.com/github/copilot-sdk](https://github.com/github/copilot-sdk) |
+| **Session APIs** | Experimental session APIs (v1.0.7+) let you list and manage skills, MCP servers, and plugins with optional auto-discovery from the working directory |
 | **Difference from agents** | Agents are markdown prompts; SDK is programmatic code |
 
 ---
@@ -896,6 +904,8 @@ A curated collection of Copilot resources, customizations, and advanced patterns
 **Repository:** [github.com/github/awesome-copilot](https://github.com/github/awesome-copilot)
 
 Includes custom instructions examples, agent patterns, orchestration strategies, MCP configs, community skills, and guides for maximizing agentic workflows. A great starting point for seeing how others use these features in practice.
+
+Recent community additions include a **GHAS Pack** — a set of skills for GitHub Advanced Security covering **CodeQL** (static analysis), **Dependabot** (dependency security), and **Secret Scanning**, contributed by the community on 2026-03-18.
 
 ---
 
