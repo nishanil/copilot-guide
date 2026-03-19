@@ -47,6 +47,7 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
 │  Running Parallel    Auto-delegates work; /fleet for explicit        │
 │    Tasks & /fleet    parallel execution via subagents                │
 │  Autopilot Mode      Hands-off autonomous task completion (CLI)     │
+│  /pr Command         Local PR creation, CI fixes, review automation │
 │  Coding Agent        Autonomous cloud agent — issues in, PRs out    │
 │  Agentic Workflows   Automate repo tasks via GitHub Actions + AI    │
 │  Mission Control     Dashboard to manage coding agents at scale     │
@@ -94,6 +95,7 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
 - [Agentic Features](#agentic-features)
   - [Running Parallel Tasks](#running-parallel-tasks)
   - [Autopilot Mode](#autopilot-mode)
+  - [/pr — Pull Request Automation](#pr--pull-request-automation)
   - [Copilot Coding Agent](#copilot-coding-agent)
   - [Agentic Workflows](#agentic-workflows)
   - [Mission Control](#mission-control)
@@ -174,13 +176,22 @@ applyTo: "src/server/**"
 - Every endpoint needs rate limiting middleware
 ```
 
+`applyTo` also accepts an array to match multiple patterns:
+
+```markdown
+---
+applyTo: ["src/server/**", "src/types/**"]
+---
+- Shared type definitions must stay in sync with API route schemas
+```
+
 </details>
 
 **Effect:** Backend files get global + backend instructions. Frontend files get global + frontend instructions. They don't bleed into each other.
 
 | | |
 |---|---|
-| **Scope** | Targeted via `applyTo` glob patterns |
+| **Scope** | Targeted via `applyTo` glob patterns (string or array) |
 | **Merging** | Path-specific merges with global (doesn't replace) |
 
 ---
@@ -345,6 +356,9 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
 |---|---|
 | `post-edit` | After Copilot edits a file |
 | `pre-commit` | Before a git commit |
+| `preToolUse` | Before a tool is invoked — can block or warn (e.g. block dangerous shell commands) |
+| `subagentStart` | When a subagent is spawned — allows injecting additional context into the subagent's prompt |
+| `preCompact` | Before context compaction runs — useful for saving state or running cleanup |
 | `startup` | When a CLI session starts — auto-submits a prompt or slash command |
 
 **Config notes:**
@@ -352,6 +366,8 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
 - Use `"command"` as a **cross-platform alias** for `bash`/`powershell` shell commands — works on all platforms without separate entries
 - `"timeout"` is accepted as an alias for `"timeoutSec"` for readable config
 - Personal hooks (`~/.copilot/hooks/`) apply across all repos; repo-level hooks (`.github/hooks/`) are scoped to that repo
+- Hooks can also be defined directly in `settings.json`, `settings.local.json`, or `config.json` (no separate `hooks.json` file required)
+- Event names accept both **camelCase** (`subagentStart`) and **PascalCase** (`SubagentStart`) for compatibility with VS Code and Claude Code
 
 | | |
 |---|---|
@@ -600,6 +616,27 @@ Autopilot and `/fleet` are independent features that combine well. A common work
 | **Toggle** | Shift+Tab during a session, or `--autopilot` flag |
 | **Cost** | Each autonomous continuation step uses premium requests |
 | **Docs** | [Autopilot mode](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/autopilot) |
+
+---
+
+### /pr — Pull Request Automation
+
+Create, view, and maintain pull requests from within a Copilot CLI session — without leaving the terminal.
+
+> **When you need it:** You've finished a local implementation and want Copilot to create the PR, fix CI failures, address reviewer comments, or resolve merge conflicts — all from the terminal.
+
+```
+> /pr create "Add rate limiting to RecipeShare API"
+> /pr fix-ci              # diagnose and fix the failing CI check
+> /pr review              # summarise open review comments and address them
+> /pr merge-conflict      # resolve merge conflicts with Copilot's help
+```
+
+| | |
+|---|---|
+| **Where** | Copilot CLI only |
+| **Available since** | v1.0.5 (March 2026) |
+| **Difference from Coding Agent** | Runs locally in your active session; Coding Agent runs cloud-side from an issue |
 
 ---
 
@@ -868,8 +905,9 @@ squad > /status
 
 Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issues), `squad copilot` (add/remove @copilot), `squad doctor`, `squad nap` (context hygiene), `squad export`/`import`, `squad aspire` (observability dashboard).
 
-#### What's new (v0.8.x)
+#### What's new (v0.8.21–v0.8.25)
 
+- **SDK-First mode** — define your entire team in TypeScript with `defineTeam()`, `defineAgent()`, `defineRouting()`, etc.; compile to `.squad/` markdown with `squad build`
 - **SubSquads** — break large teams into focused sub-groups (renamed from workstreams)
 - **Crash recovery** — sessions persist to disk; agents resume from checkpoint after failures
 - **Plugin marketplace** — `squad plugin marketplace add|browse|list`
@@ -971,6 +1009,7 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 | **Plugins** | Bundled agent toolkits | `plugin.json` manifest | When sharing agent setups across repos |
 | **Running Parallel Tasks / `/fleet`** | Auto-delegates or explicitly fans out work to subagents | *(runtime capability)* / `/fleet` slash command | When your request has multiple independent jobs |
 | **Autopilot Mode** | Hands-off autonomous task completion | Copilot CLI (`--autopilot` / Shift+Tab) | When you want Copilot to work to completion without interaction |
+| **`/pr`** | Local PR creation, CI fixes, review feedback | Copilot CLI (`/pr` command) | When you want to create or maintain PRs without leaving the terminal |
 | **Coding Agent** | Autonomous cloud agent | GitHub infrastructure | When you want async issue automation |
 | **Agentic Workflows** | AI + GitHub Actions automation | GitHub Actions | When you want automated repo maintenance |
 | **Mission Control** | Multi-agent dashboard | GitHub.com / VS Code | When managing agents at scale |
