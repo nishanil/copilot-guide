@@ -174,13 +174,21 @@ applyTo: "src/server/**"
 - Every endpoint needs rate limiting middleware
 ```
 
+`applyTo` also accepts an **array** to target multiple paths with one file:
+
+```markdown
+---
+applyTo: ["src/server/**", "src/shared/**"]
+---
+```
+
 </details>
 
 **Effect:** Backend files get global + backend instructions. Frontend files get global + frontend instructions. They don't bleed into each other.
 
 | | |
 |---|---|
-| **Scope** | Targeted via `applyTo` glob patterns |
+| **Scope** | Targeted via `applyTo` glob patterns (string or array) |
 | **Merging** | Path-specific merges with global (doesn't replace) |
 
 ---
@@ -346,12 +354,15 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
 | `post-edit` | After Copilot edits a file |
 | `pre-commit` | Before a git commit |
 | `startup` | When a CLI session starts — auto-submits a prompt or slash command |
+| `subagentStart` | When a subagent is spawned — inject additional context into the subagent's prompt |
 
 **Config notes:**
 
 - Use `"command"` as a **cross-platform alias** for `bash`/`powershell` shell commands — works on all platforms without separate entries
 - `"timeout"` is accepted as an alias for `"timeoutSec"` for readable config
 - Personal hooks (`~/.copilot/hooks/`) apply across all repos; repo-level hooks (`.github/hooks/`) are scoped to that repo
+- Hooks can also be defined directly in `settings.json`, `settings.local.json`, or `config.json` for co-located configuration
+- Hook event names are **case-insensitive** — both `camelCase` (e.g. `postEdit`) and `PascalCase` (e.g. `PostEdit`) work, enabling the same config to be shared across Copilot CLI, VS Code, and Claude Code
 
 | | |
 |---|---|
