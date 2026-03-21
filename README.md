@@ -866,14 +866,54 @@ squad > Build the login page
 squad > /status
 ```
 
-Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issues), `squad copilot` (add/remove @copilot), `squad doctor`, `squad nap` (context hygiene), `squad export`/`import`, `squad aspire` (observability dashboard).
+Key CLI commands: `squad init`, `squad status`, `squad build` (compile TypeScript definitions), `squad migrate` (migrate from older structures), `squad triage` (auto-triage issues), `squad copilot` (add/remove @copilot), `squad doctor`, `squad nap` (context hygiene), `squad export`/`import`, `squad aspire` (observability dashboard).
+
+#### SDK-First Mode (v0.8.21+)
+
+Define your team as **TypeScript code** instead of raw markdown. Builder functions validate and compile to `.squad/` at build time:
+
+<details markdown>
+<summary>Example — TypeScript team definition</summary>
+
+```typescript
+import { defineTeam, defineAgent, defineSkill, defineSquad } from '@bradygaster/squad-sdk';
+
+const team = defineTeam({ name: 'RecipeShare Team', project: 'RecipeShare API' });
+
+const lead = defineAgent({
+  name: 'Keaton',
+  role: 'Lead',
+  tools: ['read_file', 'write_file', 'run_command'],
+});
+
+const skill = defineSkill({
+  name: 'drizzle-migrations',
+  description: 'Create and apply Drizzle ORM migrations',
+});
+
+export default defineSquad({ team, agents: [lead], skills: [skill] });
+```
+
+</details>
+
+```bash
+# Compile TypeScript definitions → .squad/ markdown
+npx squad build
+
+# Validate without writing files
+npx squad build --check
+
+# Preview what would be generated
+npx squad build --dry-run
+```
 
 #### What's new (v0.8.x)
 
-- **SubSquads** — break large teams into focused sub-groups (renamed from workstreams)
+- **SDK-First Mode** — define agents, routing, and team config as TypeScript; `squad build` compiles to `.squad/` (v0.8.21+)
+- **SubSquads** — break large teams into focused sub-groups (renamed from workstreams, v0.8.24)
 - **Crash recovery** — sessions persist to disk; agents resume from checkpoint after failures
 - **Plugin marketplace** — `squad plugin marketplace add|browse|list`
-- **Azure DevOps adapter** — Squad for enterprise via `CommunicationAdapter`
+- **Platform adapters** — Azure DevOps (`PlatformAdapter`), GitHub, and Microsoft Planner; `CommunicationAdapter` for GitHub Discussions, ADO, and Teams messaging
 - **Upstream sources** — `squad upstream add|sync` to pull from shared squad configs
 - **Context hygiene** — `squad nap --deep` to compress and prune accumulated context
 - **Ralph** — event-driven monitoring agent that watches all agent activity
@@ -1033,7 +1073,7 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 - [Copilot SDK](https://github.com/github/copilot-sdk) · [Copilot Spaces](https://docs.github.com/en/copilot/how-tos/provide-context/use-copilot-spaces)
 
 **Community**
-- [awesome-copilot](https://github.com/github/awesome-copilot) · [Squad](https://github.com/bradygaster/squad) · [Squad Docs](https://bradygaster.github.io/squad/)
+- [awesome-copilot](https://github.com/github/awesome-copilot) · [Squad](https://github.com/bradygaster/squad) · [Squad Docs](https://bradygaster.github.io/squad/) · [Squad SDK Reference](https://bradygaster.github.io/squad/reference/sdk/)
 
 ---
 
