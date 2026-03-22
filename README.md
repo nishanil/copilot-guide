@@ -306,6 +306,7 @@ When creating or modifying database tables.
 | **Discovery** | VS Code has a built-in MCP server gallery (search `@mcp` in Extensions) |
 | **Security** | Servers run locally — your credentials stay on your machine |
 | **OAuth / API keys** | MCP servers can request you to visit a URL for out-of-band auth flows (e.g. OAuth, API key entry) |
+| **Folder trust** | Workspace MCP servers (`.mcp.json`, `.vscode/mcp.json`, `devcontainer.json`) are loaded only after folder trust is confirmed (as of v1.0.8, March 2026) |
 
 ---
 
@@ -352,11 +353,13 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
 - Use `"command"` as a **cross-platform alias** for `bash`/`powershell` shell commands — works on all platforms without separate entries
 - `"timeout"` is accepted as an alias for `"timeoutSec"` for readable config
 - Personal hooks (`~/.copilot/hooks/`) apply across all repos; repo-level hooks (`.github/hooks/`) are scoped to that repo
+- Hooks can also be defined inline in `settings.json`, `settings.local.json`, or `config.json` (as of v1.0.8, March 2026)
 
 | | |
 |---|---|
 | **Scope** | Runs automatically at lifecycle events — no manual invocation |
 | **Personal hooks** | `~/.copilot/hooks/` — applies to all repos on your machine |
+| **Settings hooks** | Can also be defined in `settings.json`, `settings.local.json`, or `config.json` |
 | **Difference from skills** | Skills are knowledge Copilot reads; hooks are scripts Copilot runs |
 
 ---
@@ -564,10 +567,12 @@ The CLI's **autopilot mode** lets Copilot work autonomously through a multi-step
 #### How to enter autopilot mode
 
 - **During an interactive session** — press **Shift+Tab** to cycle through modes until you reach autopilot
-- **From the command line** — start with the `--autopilot` flag:
+- **From the command line** — start with the `--autopilot` flag (use `--effort` / `--reasoning-effort` to set the reasoning level):
 
 ```bash
 copilot --autopilot --yolo --max-autopilot-continues 10 -p "Add input validation to all RecipeShare API endpoints"
+# or with reasoning effort:
+copilot --autopilot --effort high -p "Refactor the RecipeShare auth module"
 ```
 
 Copilot continues autonomously until one of these happens:
@@ -575,6 +580,14 @@ Copilot continues autonomously until one of these happens:
 2. A blocking problem occurs
 3. You press **Ctrl+C**
 4. The `--max-autopilot-continues` limit is reached (if set)
+
+#### Useful commands during autopilot
+
+| Command | What it does |
+|---|---|
+| `/undo` | Undo the last turn and revert all file changes it made |
+| `/allow-all` (or `/yolo`) | Grant full permissions mid-session |
+| `Shift+Tab` | Cycle back through modes (exit autopilot) |
 
 #### Permissions
 
@@ -796,6 +809,10 @@ Programmatic access to Copilot's capabilities in **Node.js**, **Python**, **Go**
 # Install (Node.js example)
 npm install @github/copilot-sdk
 ```
+
+**Recent SDK additions (v1.0.10, March 2026):**
+- SDK clients can **register custom slash commands** when starting or joining a session
+- SDK clients can display **elicitation dialogs** to the user via `session.ui.elicitation`
 
 | | |
 |---|---|
