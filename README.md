@@ -142,6 +142,7 @@ Always-on project context. Copilot reads this on **every** interaction — chat,
 | **Scope** | Repository-wide, always-on |
 | **Applies to** | Chat, completions, code review — everything |
 | **Commit it** | Yes — the whole team benefits |
+| **Monorepo support** | Copilot discovers instructions (and MCP servers, skills, agents) at every directory level from the working directory up to the git root — enabling per-package customization in monorepos |
 
 ---
 
@@ -222,7 +223,7 @@ Modular knowledge packages with a `SKILL.md` that Copilot loads on-demand when r
 
 > **When you need it:** Your deployment or migration process is complex and you want Copilot (including the coding agent) to know how to do it without you explaining every time.
 
-**📁 Location:** `.github/skills/{skill-name}/SKILL.md`
+**📁 Location:** `.github/skills/{skill-name}/SKILL.md` (repo) or `~/.agents/skills/{skill-name}/SKILL.md` (personal, all repos)
 
 <details markdown>
 <summary>Example — <code>drizzle-migrations/SKILL.md</code></summary>
@@ -256,6 +257,8 @@ When creating or modifying database tables.
 | | |
 |---|---|
 | **Scope** | Auto-loaded when the task domain matches |
+| **Repo path** | `.github/skills/{name}/SKILL.md` — committed with the repo |
+| **Personal path** | `~/.agents/skills/{name}/SKILL.md` — applies to all repos on your machine |
 | **Difference from prompts** | Skills are auto-detected; prompts are manually invoked |
 
 ---
@@ -266,7 +269,14 @@ When creating or modifying database tables.
 
 > **When you need it:** Your app needs to interact with other systems, ex: query PostgreSQL, check GitHub issues, or interact with cloud storage. Without MCP, you'd have to copy-paste data into chat.
 
-**📁 Location:** `.vscode/mcp.json` (VS Code) or `~/.copilot/mcp-config.json` (CLI)
+**📁 Location:** Any of the following (workspace-level servers require folder trust confirmation):
+
+| File | Scope |
+|---|---|
+| `.mcp.json` | Workspace root — shared with everyone in the repo |
+| `.vscode/mcp.json` | VS Code workspace |
+| `devcontainer.json` | Dev container (under the `"mcpServers"` key) |
+| `~/.copilot/mcp-config.json` | Personal CLI default — applies to all repos |
 
 <details markdown>
 <summary>Example configuration</summary>
@@ -304,7 +314,8 @@ When creating or modifying database tables.
 |---|---|
 | **Scope** | Available to all agents in the session |
 | **Discovery** | VS Code has a built-in MCP server gallery (search `@mcp` in Extensions) |
-| **Security** | Servers run locally — your credentials stay on your machine |
+| **Security** | Servers run locally — your credentials stay on your machine. Workspace MCP servers (`.mcp.json`, `.vscode/mcp.json`, `devcontainer.json`) only load after **folder trust** is confirmed |
+| **Org policy** | Organization policy for third-party MCP servers is enforced for all users; blocked servers show a warning |
 | **OAuth / API keys** | MCP servers can request you to visit a URL for out-of-band auth flows (e.g. OAuth, API key entry) |
 
 ---
@@ -585,6 +596,8 @@ On entering autopilot, the CLI prompts you to choose permissions:
 3. **Cancel**
 
 You can grant full permissions mid-session with the `/allow-all` (or `/yolo`) command.
+
+If autopilot makes changes you didn't want, use **`/undo`** to revert the last turn and its file changes — available in any CLI session (not just autopilot).
 
 #### Autopilot + Fleet
 
@@ -868,8 +881,9 @@ squad > /status
 
 Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issues), `squad copilot` (add/remove @copilot), `squad doctor`, `squad nap` (context hygiene), `squad export`/`import`, `squad aspire` (observability dashboard).
 
-#### What's new (v0.8.x)
+#### What's new (v0.9.x)
 
+- **v0.9.0/v0.9.1 (2026-03-23)** — see the [Squad CHANGELOG](https://github.com/bradygaster/squad/blob/main/CHANGELOG.md#090---2026-03-23) for full release notes
 - **SubSquads** — break large teams into focused sub-groups (renamed from workstreams)
 - **Crash recovery** — sessions persist to disk; agents resume from checkpoint after failures
 - **Plugin marketplace** — `squad plugin marketplace add|browse|list`
@@ -964,8 +978,8 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 | **Instructions** | Always-on project context | `.github/copilot-instructions.md` | When Copilot doesn't know your stack |
 | **Path-specific** | Per-folder/file overrides | `.github/instructions/*.instructions.md` | When parts need different rules |
 | **Prompts** | Reusable task recipes | `.github/prompts/*.prompt.md` | When you repeat multi-step tasks |
-| **Skills** | Packaged domain knowledge | `.github/skills/{name}/SKILL.md` | When procedures are complex |
-| **MCP Servers** | External tool connections | `.vscode/mcp.json` | When agents need databases/APIs |
+| **Skills** | Packaged domain knowledge | `.github/skills/{name}/SKILL.md` or `~/.agents/skills/` | When procedures are complex |
+| **MCP Servers** | External tool connections | `.mcp.json` / `.vscode/mcp.json` / `devcontainer.json` | When agents need databases/APIs |
 | **Hooks** | Lifecycle automation | `.github/hooks/` or `~/.copilot/hooks/` | When you want auto-formatting/linting/startup prompts |
 | **Agents** | Named specialist personas | `.github/agents/{name}.agent.md` | When you need dedicated workflow owners |
 | **Plugins** | Bundled agent toolkits | `plugin.json` manifest | When sharing agent setups across repos |
@@ -1004,13 +1018,19 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 └── workflows/
     └── ...
 
+.mcp.json                                # Workspace MCP servers (repo root, shared)
+
 .vscode/
-└── mcp.json                             # MCP server config
+└── mcp.json                             # VS Code MCP server config
 
 ~/.copilot/
 ├── hooks/                               # Personal hooks (all repos)
 │   └── hooks.json
 └── settings.json                        # CLI user config (enabledPlugins, etc.)
+
+~/.agents/
+└── skills/                              # Personal skills (all repos)
+    └── {skill-name}/SKILL.md
 ```
 
 ---
