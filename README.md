@@ -222,7 +222,7 @@ Modular knowledge packages with a `SKILL.md` that Copilot loads on-demand when r
 
 > **When you need it:** Your deployment or migration process is complex and you want Copilot (including the coding agent) to know how to do it without you explaining every time.
 
-**📁 Location:** `.github/skills/{skill-name}/SKILL.md`
+**📁 Location:** `.github/skills/{skill-name}/SKILL.md` (repo-level) or `~/.agents/skills/{skill-name}/SKILL.md` (personal, all repos)
 
 <details markdown>
 <summary>Example — <code>drizzle-migrations/SKILL.md</code></summary>
@@ -256,6 +256,7 @@ When creating or modifying database tables.
 | | |
 |---|---|
 | **Scope** | Auto-loaded when the task domain matches |
+| **Personal skills** | `~/.agents/skills/` — applies to all repos on your machine (added in v1.0.11, aligns with VS Code's GHCP4A extension) |
 | **Difference from prompts** | Skills are auto-detected; prompts are manually invoked |
 
 ---
@@ -306,6 +307,7 @@ When creating or modifying database tables.
 | **Discovery** | VS Code has a built-in MCP server gallery (search `@mcp` in Extensions) |
 | **Security** | Servers run locally — your credentials stay on your machine |
 | **OAuth / API keys** | MCP servers can request you to visit a URL for out-of-band auth flows (e.g. OAuth, API key entry) |
+| **Org policy** | Organization admins can enforce a third-party MCP server allowlist; users see a warning when a server is blocked by policy |
 
 ---
 
@@ -352,6 +354,8 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
 - Use `"command"` as a **cross-platform alias** for `bash`/`powershell` shell commands — works on all platforms without separate entries
 - `"timeout"` is accepted as an alias for `"timeoutSec"` for readable config
 - Personal hooks (`~/.copilot/hooks/`) apply across all repos; repo-level hooks (`.github/hooks/`) are scoped to that repo
+- Hooks can also be defined inline in `settings.json`, `settings.local.json`, or `config.json` under a `"hooks"` key — useful when you want a single file rather than a separate hooks directory
+- When multiple extensions define hooks for the same event, their hook lists are **merged** (not overwritten)
 
 | | |
 |---|---|
@@ -866,10 +870,12 @@ squad > Build the login page
 squad > /status
 ```
 
-Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issues), `squad copilot` (add/remove @copilot), `squad doctor`, `squad nap` (context hygiene), `squad export`/`import`, `squad aspire` (observability dashboard).
+Key CLI commands: `squad init`, `squad status`, `squad version`, `squad triage` (auto-triage issues), `squad copilot` (add/remove @copilot), `squad doctor`, `squad nap` (context hygiene), `squad export`/`import`, `squad aspire` (observability dashboard).
 
-#### What's new (v0.8.x)
+#### What's new (v0.9.x)
 
+- **`squad version` subcommand** — print installed version alongside the existing `--version` / `-v` flag
+- **Release process hardening** — preflight dependency scan, `npm pack --dry-run` validation, and pre-publish CI gate block broken releases before they reach npm
 - **SubSquads** — break large teams into focused sub-groups (renamed from workstreams)
 - **Crash recovery** — sessions persist to disk; agents resume from checkpoint after failures
 - **Plugin marketplace** — `squad plugin marketplace add|browse|list`
@@ -1010,7 +1016,12 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 ~/.copilot/
 ├── hooks/                               # Personal hooks (all repos)
 │   └── hooks.json
-└── settings.json                        # CLI user config (enabledPlugins, etc.)
+└── settings.json                        # CLI user config (enabledPlugins, hooks, etc.)
+
+~/.agents/
+└── skills/                              # Personal skills (all repos, v1.0.11+)
+    └── my-skill/
+        └── SKILL.md
 ```
 
 ---
