@@ -222,7 +222,9 @@ Modular knowledge packages with a `SKILL.md` that Copilot loads on-demand when r
 
 > **When you need it:** Your deployment or migration process is complex and you want Copilot (including the coding agent) to know how to do it without you explaining every time.
 
-**📁 Location:** `.github/skills/{skill-name}/SKILL.md`
+**📁 Location:** `.github/skills/{skill-name}/SKILL.md` (repo-level, committed to git)
+
+> 💡 **Personal skills** — place skills in `~/.agents/skills/` to make them available across all your repos without committing them. This path aligns with VS Code's GitHub Copilot extension default for personal agent skills (added in CLI v1.0.11).
 
 <details markdown>
 <summary>Example — <code>drizzle-migrations/SKILL.md</code></summary>
@@ -306,6 +308,7 @@ When creating or modifying database tables.
 | **Discovery** | VS Code has a built-in MCP server gallery (search `@mcp` in Extensions) |
 | **Security** | Servers run locally — your credentials stay on your machine |
 | **OAuth / API keys** | MCP servers can request you to visit a URL for out-of-band auth flows (e.g. OAuth, API key entry) |
+| **Org policy** | Organization admins can allowlist/blocklist MCP servers — the CLI shows a warning when a server is blocked by policy (enforced as of CLI v1.0.11) |
 
 ---
 
@@ -868,7 +871,9 @@ squad > /status
 
 Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issues), `squad copilot` (add/remove @copilot), `squad doctor`, `squad nap` (context hygiene), `squad export`/`import`, `squad aspire` (observability dashboard).
 
-#### What's new (v0.8.x)
+#### What's new (v0.9.x)
+
+Released March 2026 — [v0.9.0](https://github.com/bradygaster/squad/releases/tag/v0.9.0) / [v0.9.1](https://github.com/bradygaster/squad/releases/tag/v0.9.1)
 
 - **SubSquads** — break large teams into focused sub-groups (renamed from workstreams)
 - **Crash recovery** — sessions persist to disk; agents resume from checkpoint after failures
@@ -877,6 +882,8 @@ Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issu
 - **Upstream sources** — `squad upstream add|sync` to pull from shared squad configs
 - **Context hygiene** — `squad nap --deep` to compress and prune accumulated context
 - **Ralph** — event-driven monitoring agent that watches all agent activity
+- **`squad version`** — new subcommand to print the installed version
+- **Challenger agent** — Devil's Advocate template that fact-checks proposals and surfaces risks before the team commits to an approach
 
 | | Vanilla Custom Agent | Squad |
 |---|---|---|
