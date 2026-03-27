@@ -256,6 +256,9 @@ When creating or modifying database tables.
 | | |
 |---|---|
 | **Scope** | Auto-loaded when the task domain matches |
+| **Repo location** | `.github/skills/{skill-name}/SKILL.md` |
+| **Personal skills (CLI)** | `~/.agents/skills/{skill-name}/SKILL.md` — loaded for all repos on your machine |
+| **Monorepo support** | Skills are discovered at every directory level from the working directory up to the git root (v1.0.11) |
 | **Difference from prompts** | Skills are auto-detected; prompts are manually invoked |
 
 ---
@@ -306,6 +309,7 @@ When creating or modifying database tables.
 | **Discovery** | VS Code has a built-in MCP server gallery (search `@mcp` in Extensions) |
 | **Security** | Servers run locally — your credentials stay on your machine |
 | **OAuth / API keys** | MCP servers can request you to visit a URL for out-of-band auth flows (e.g. OAuth, API key entry) |
+| **LLM sampling** | MCP servers can request LLM inference from Copilot (with user approval) — enabling AI-assisted tool implementations (v1.0.13) |
 
 ---
 
@@ -352,6 +356,7 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
 - Use `"command"` as a **cross-platform alias** for `bash`/`powershell` shell commands — works on all platforms without separate entries
 - `"timeout"` is accepted as an alias for `"timeoutSec"` for readable config
 - Personal hooks (`~/.copilot/hooks/`) apply across all repos; repo-level hooks (`.github/hooks/`) are scoped to that repo
+- Plugin hooks receive `CLAUDE_PROJECT_DIR` and `CLAUDE_PLUGIN_DATA` environment variables automatically; use `{{project_dir}}` and `{{plugin_data_dir}}` as template variables inside hook command strings (v1.0.12)
 
 | | |
 |---|---|
@@ -1011,6 +1016,11 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 ├── hooks/                               # Personal hooks (all repos)
 │   └── hooks.json
 └── settings.json                        # CLI user config (enabledPlugins, etc.)
+
+~/.agents/
+└── skills/                              # Personal skills (CLI, all repos — v1.0.11+)
+    └── {skill-name}/
+        └── SKILL.md
 ```
 
 ---
