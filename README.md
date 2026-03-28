@@ -222,7 +222,9 @@ Modular knowledge packages with a `SKILL.md` that Copilot loads on-demand when r
 
 > **When you need it:** Your deployment or migration process is complex and you want Copilot (including the coding agent) to know how to do it without you explaining every time.
 
-**📁 Location:** `.github/skills/{skill-name}/SKILL.md`
+**📁 Location:** `.github/skills/{skill-name}/SKILL.md` (repo-level) or `~/.agents/skills/{skill-name}/SKILL.md` (personal, applies across all repos)
+
+> 💡 **Monorepo support:** Skills (and agents, MCP servers) are discovered at every directory level from the working directory up to the git root — so each app in a monorepo can have its own skills without conflicts.
 
 <details markdown>
 <summary>Example — <code>drizzle-migrations/SKILL.md</code></summary>
@@ -256,6 +258,7 @@ When creating or modifying database tables.
 | | |
 |---|---|
 | **Scope** | Auto-loaded when the task domain matches |
+| **Personal skills** | `~/.agents/skills/` — available across all repos on your machine |
 | **Difference from prompts** | Skills are auto-detected; prompts are manually invoked |
 
 ---
@@ -352,6 +355,7 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
 - Use `"command"` as a **cross-platform alias** for `bash`/`powershell` shell commands — works on all platforms without separate entries
 - `"timeout"` is accepted as an alias for `"timeoutSec"` for readable config
 - Personal hooks (`~/.copilot/hooks/`) apply across all repos; repo-level hooks (`.github/hooks/`) are scoped to that repo
+- Plugin hooks support template variables: `{{project_dir}}` and `{{plugin_data_dir}}` expand at runtime (along with the `CLAUDE_PROJECT_DIR` and `CLAUDE_PLUGIN_DATA` environment variables)
 
 | | |
 |---|---|
@@ -584,7 +588,15 @@ On entering autopilot, the CLI prompts you to choose permissions:
 2. **Continue with limited permissions** — auto-denies tool requests that need approval
 3. **Cancel**
 
-You can grant full permissions mid-session with the `/allow-all` (or `/yolo`) command.
+You can grant full permissions mid-session with the `/allow-all` (or `/yolo`) command. Use `/allow-all off` to revoke, and `/allow-all show` to check current status.
+
+#### Useful session commands
+
+| Command | What it does |
+|---|---|
+| `/undo` | Undo the last turn and revert any file changes it made |
+| `/cd <path>` | Change the working directory for the current session (persists across `/clear`) |
+| `/allow-all on\|off\|show` | Enable, disable, or check full-permission mode |
 
 #### Autopilot + Fleet
 
@@ -868,15 +880,19 @@ squad > /status
 
 Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issues), `squad copilot` (add/remove @copilot), `squad doctor`, `squad nap` (context hygiene), `squad export`/`import`, `squad aspire` (observability dashboard).
 
-#### What's new (v0.8.x)
+#### What's new (v0.9.x)
 
-- **SubSquads** — break large teams into focused sub-groups (renamed from workstreams)
-- **Crash recovery** — sessions persist to disk; agents resume from checkpoint after failures
-- **Plugin marketplace** — `squad plugin marketplace add|browse|list`
-- **Azure DevOps adapter** — Squad for enterprise via `CommunicationAdapter`
-- **Upstream sources** — `squad upstream add|sync` to pull from shared squad configs
-- **Context hygiene** — `squad nap --deep` to compress and prune accumulated context
-- **Ralph** — event-driven monitoring agent that watches all agent activity
+Released March 2026 — no breaking changes; all new features are opt-in.
+
+- **Personal Squad** — `squad init --personal` creates a team in `~/.squad/` that follows you across all projects
+- **Worktree Spawning** — agents spawn isolated git worktrees for parallel work without branch conflicts
+- **Machine Capability Discovery** — Squad auto-detects available tools (`docker`, `kubectl`, `az`, `gh`, etc.) and routes tasks accordingly
+- **Economy Mode** — run squad with lower-cost models for routine tasks; premium models reserved for complex decisions
+- **Cooperative Rate Limiting (RAAS)** — traffic-light pattern coordinates API rate limits across parallel agents
+- **Auto-Wired Telemetry** — OTEL traces automatically wired to squad sessions (no manual setup)
+- **Iterative Retrieval skill** — max-3-cycle agent spawn protocol for research tasks
+
+Earlier notable additions (v0.8.x): SubSquads, crash recovery, plugin marketplace, Azure DevOps adapter, upstream sources, context hygiene (`squad nap`), Ralph monitoring agent.
 
 | | Vanilla Custom Agent | Squad |
 |---|---|---|
