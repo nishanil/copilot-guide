@@ -142,6 +142,7 @@ Always-on project context. Copilot reads this on **every** interaction — chat,
 | **Scope** | Repository-wide, always-on |
 | **Applies to** | Chat, completions, code review — everything |
 | **Commit it** | Yes — the whole team benefits |
+| **Monorepo** | Discovered at every directory level from working dir up to git root (v1.0.11) |
 
 ---
 
@@ -222,7 +223,7 @@ Modular knowledge packages with a `SKILL.md` that Copilot loads on-demand when r
 
 > **When you need it:** Your deployment or migration process is complex and you want Copilot (including the coding agent) to know how to do it without you explaining every time.
 
-**📁 Location:** `.github/skills/{skill-name}/SKILL.md`
+**📁 Location:** `.github/skills/{skill-name}/SKILL.md` (repo) · `~/.agents/skills/{skill-name}/SKILL.md` (personal)
 
 <details markdown>
 <summary>Example — <code>drizzle-migrations/SKILL.md</code></summary>
@@ -253,9 +254,12 @@ When creating or modifying database tables.
 
 **Effect:** When Copilot detects a task related to migrations, it loads this skill automatically. Works across CLI, VS Code, and the coding agent.
 
+> 💡 **Monorepo support (v1.0.11):** Skills are discovered at every directory level from your working directory up to the git root, so monorepos with per-package skill sets work without extra configuration.
+
 | | |
 |---|---|
 | **Scope** | Auto-loaded when the task domain matches |
+| **Personal skills** | `~/.agents/skills/` — personal skills available across all repos (v1.0.11) |
 | **Difference from prompts** | Skills are auto-detected; prompts are manually invoked |
 
 ---
@@ -266,7 +270,7 @@ When creating or modifying database tables.
 
 > **When you need it:** Your app needs to interact with other systems, ex: query PostgreSQL, check GitHub issues, or interact with cloud storage. Without MCP, you'd have to copy-paste data into chat.
 
-**📁 Location:** `.vscode/mcp.json` (VS Code) or `~/.copilot/mcp-config.json` (CLI)
+**📁 Location:** `.vscode/mcp.json` (VS Code) · `.mcp.json` (git root, CLI v1.0.12+) · `~/.copilot/mcp-config.json` (CLI user-level)
 
 <details markdown>
 <summary>Example configuration</summary>
@@ -306,6 +310,7 @@ When creating or modifying database tables.
 | **Discovery** | VS Code has a built-in MCP server gallery (search `@mcp` in Extensions) |
 | **Security** | Servers run locally — your credentials stay on your machine |
 | **OAuth / API keys** | MCP servers can request you to visit a URL for out-of-band auth flows (e.g. OAuth, API key entry) |
+| **Org policy** | Org admins can enforce an allowlist of approved third-party MCP servers; blocked servers show a warning (v1.0.11) |
 
 ---
 
@@ -346,6 +351,7 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
 | `post-edit` | After Copilot edits a file |
 | `pre-commit` | Before a git commit |
 | `startup` | When a CLI session starts — auto-submits a prompt or slash command |
+| `sessionStart` | Like startup, but also supports `additionalContext` injected directly into the conversation (v1.0.11) |
 
 **Config notes:**
 
@@ -586,6 +592,17 @@ On entering autopilot, the CLI prompts you to choose permissions:
 
 You can grant full permissions mid-session with the `/allow-all` (or `/yolo`) command.
 
+#### Useful CLI commands & flags
+
+| Command / Flag | What it does |
+|---|---|
+| `/undo` | Undo the last turn and revert any file changes it made (v1.0.10) |
+| `/rewind` | Open a timeline picker — roll back to any earlier point in conversation history (v1.0.13) |
+| `/cd <path>` | Change working directory for the current session; each session keeps its own working directory (v1.0.11) |
+| `--effort` | Shorthand alias for `--reasoning-effort` — e.g. `--effort high` (v1.0.10) |
+| `/new` | Start a fresh conversation (old session is backgrounded) (v1.0.11) |
+| `/clear` | Abandon the current session entirely (v1.0.11) |
+
 #### Autopilot + Fleet
 
 Autopilot and `/fleet` are independent features that combine well. A common workflow:
@@ -812,7 +829,7 @@ npm install @github/copilot-sdk
 
 ### Squad
 
-A persistent team of AI agents with identity, memory, and parallel coordination — now with its own CLI, interactive shell, SDK, and community documentation site.
+A persistent team of AI agents with identity, memory, and parallel coordination — now with its own CLI, interactive shell, SDK, and community documentation site. Current stable release: **v0.9.x**.
 
 **Repository:** [github.com/bradygaster/squad](https://github.com/bradygaster/squad) · **Docs:** [bradygaster.github.io/squad](https://bradygaster.github.io/squad/)
 
@@ -868,7 +885,16 @@ squad > /status
 
 Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issues), `squad copilot` (add/remove @copilot), `squad doctor`, `squad nap` (context hygiene), `squad export`/`import`, `squad aspire` (observability dashboard).
 
-#### What's new (v0.8.x)
+#### What's new (v0.9.x)
+
+- **Tiered agent memory skill** — hot/cold/wiki tiers for efficient long-session memory management
+- **Circuit breaker pattern** — docs/guide for building resilient agents with exponential backoff and state machine transitions
+- **Automated retro enforcement** — sprint retrospectives via GitHub Issues instead of markdown
+- **ESM + Node 24 compatibility** — full ESM runtime fix for Node.js 24+ environments (Codespaces)
+- **SDK samples build validation** — CI gate validating all sample projects before release
+- For full details, see the [CHANGELOG](https://github.com/bradygaster/squad/blob/main/CHANGELOG.md)
+
+#### What was new in v0.8.x
 
 - **SubSquads** — break large teams into focused sub-groups (renamed from workstreams)
 - **Crash recovery** — sessions persist to disk; agents resume from checkpoint after failures
