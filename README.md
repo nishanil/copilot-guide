@@ -117,6 +117,8 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
 
 > Files you add to your repo (or user config) that shape how Copilot behaves.
 
+> 💡 **Monorepo support (v1.0.11+):** Custom instructions, MCP servers, skills, and agents are discovered at every directory level from the current working directory up to the git root. This means you can have customizations in subdirectories of a monorepo and Copilot will find and merge them correctly without needing everything at the root level.
+
 ### Custom Instructions
 
 Always-on project context. Copilot reads this on **every** interaction — chat, completions, code review.
@@ -253,9 +255,12 @@ When creating or modifying database tables.
 
 **Effect:** When Copilot detects a task related to migrations, it loads this skill automatically. Works across CLI, VS Code, and the coding agent.
 
+> 💡 **Personal skills directory:** Add skills to `~/.agents/skills/` for skills that apply across all your projects on your machine (aligning with VS Code's Copilot extension default discovery path).
+
 | | |
 |---|---|
 | **Scope** | Auto-loaded when the task domain matches |
+| **Personal directory** | `~/.agents/skills/` — skills available in all repos on your machine |
 | **Difference from prompts** | Skills are auto-detected; prompts are manually invoked |
 
 ---
@@ -346,12 +351,16 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
 | `post-edit` | After Copilot edits a file |
 | `pre-commit` | Before a git commit |
 | `startup` | When a CLI session starts — auto-submits a prompt or slash command |
+| `sessionStart` | When a new session begins — inject additional context into the conversation |
+| `preCompact` | Before context compaction — run cleanup or logging before the context is compressed |
 
 **Config notes:**
 
 - Use `"command"` as a **cross-platform alias** for `bash`/`powershell` shell commands — works on all platforms without separate entries
 - `"timeout"` is accepted as an alias for `"timeoutSec"` for readable config
 - Personal hooks (`~/.copilot/hooks/`) apply across all repos; repo-level hooks (`.github/hooks/`) are scoped to that repo
+- **Additional config sources:** `.claude/settings.json` and `.claude/settings.local.json` in the repo root are also loaded as hook config sources (useful for repo-local overrides or per-developer settings that shouldn't be committed)
+- **Plugin hook env variables:** Plugin hooks receive `CLAUDE_PROJECT_DIR` (project root path) and `CLAUDE_PLUGIN_DATA` (plugin data directory) environment variables. Template variables `{{project_dir}}` and `{{plugin_data_dir}}` are also supported in hook configuration strings
 
 | | |
 |---|---|
@@ -584,7 +593,7 @@ On entering autopilot, the CLI prompts you to choose permissions:
 2. **Continue with limited permissions** — auto-denies tool requests that need approval
 3. **Cancel**
 
-You can grant full permissions mid-session with the `/allow-all` (or `/yolo`) command.
+You can grant full permissions mid-session with `/allow-all on` (or `/yolo`). Use `/allow-all off` to revoke permissions and `/allow-all show` to check the current state.
 
 #### Autopilot + Fleet
 
@@ -868,8 +877,9 @@ squad > /status
 
 Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issues), `squad copilot` (add/remove @copilot), `squad doctor`, `squad nap` (context hygiene), `squad export`/`import`, `squad aspire` (observability dashboard).
 
-#### What's new (v0.8.x)
+#### What's new (v0.9.x)
 
+- **v0.9.0/v0.9.1** (2026-03-23) — latest stable release; see [CHANGELOG.md](https://github.com/bradygaster/squad/blob/main/CHANGELOG.md) for full details
 - **SubSquads** — break large teams into focused sub-groups (renamed from workstreams)
 - **Crash recovery** — sessions persist to disk; agents resume from checkpoint after failures
 - **Plugin marketplace** — `squad plugin marketplace add|browse|list`
