@@ -142,6 +142,8 @@ Always-on project context. Copilot reads this on **every** interaction — chat,
 | **Scope** | Repository-wide, always-on |
 | **Applies to** | Chat, completions, code review — everything |
 | **Commit it** | Yes — the whole team benefits |
+| **Monorepo support** | Instructions (and all other customization files) are discovered at every directory level from the working directory up to the git root — each sub-package can have its own `.github/copilot-instructions.md` |
+| **Alias config** | `.claude/settings.json` and `.claude/settings.local.json` are read as additional repo config sources alongside `.copilot/` files |
 
 ---
 
@@ -257,6 +259,8 @@ When creating or modifying database tables.
 |---|---|
 | **Scope** | Auto-loaded when the task domain matches |
 | **Difference from prompts** | Skills are auto-detected; prompts are manually invoked |
+| **Personal skills** | `~/.agents/skills/` — a personal skill discovery directory that applies across all repos (aligns with VS Code's extension default) |
+| **Monorepo support** | Skills are discovered at every directory level from the working directory up to the git root — each sub-package in a monorepo gets its own skills |
 
 ---
 
@@ -306,6 +310,10 @@ When creating or modifying database tables.
 | **Discovery** | VS Code has a built-in MCP server gallery (search `@mcp` in Extensions) |
 | **Security** | Servers run locally — your credentials stay on your machine |
 | **OAuth / API keys** | MCP servers can request you to visit a URL for out-of-band auth flows (e.g. OAuth, API key entry) |
+| **Microsoft Entra ID** | MCP servers using Entra ID authentication no longer show a consent screen on every login |
+| **Sampling** | MCP servers can request LLM inference (sampling) on your behalf — you see a review prompt before approval |
+| **Org policy** | Organization admins can enforce an allowlist for third-party MCP servers; blocked servers are hidden from `/mcp show` |
+| **Monorepo support** | MCP server configs are discovered at every directory level from the working directory up to the git root |
 
 ---
 
@@ -352,6 +360,7 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
 - Use `"command"` as a **cross-platform alias** for `bash`/`powershell` shell commands — works on all platforms without separate entries
 - `"timeout"` is accepted as an alias for `"timeoutSec"` for readable config
 - Personal hooks (`~/.copilot/hooks/`) apply across all repos; repo-level hooks (`.github/hooks/`) are scoped to that repo
+- Plugin hooks receive `CLAUDE_PROJECT_DIR` and `CLAUDE_PLUGIN_DATA` environment variables, and support `{{project_dir}}` and `{{plugin_data_dir}}` template variables in hook configurations
 
 | | |
 |---|---|
@@ -584,7 +593,17 @@ On entering autopilot, the CLI prompts you to choose permissions:
 2. **Continue with limited permissions** — auto-denies tool requests that need approval
 3. **Cancel**
 
-You can grant full permissions mid-session with the `/allow-all` (or `/yolo`) command.
+You can grant full permissions mid-session with the `/allow-all` (or `/yolo`) command. The command supports `on`, `off`, and `show` subcommands to enable, disable, or check the current allow-all state:
+
+```
+> /allow-all on     # grant all permissions
+> /allow-all off    # revoke — back to prompting per tool call
+> /allow-all show   # check current state
+```
+
+#### Rewinding conversation history
+
+Use `/rewind` or press **Esc** twice to open a **timeline picker** that lets you roll back to any point in the conversation — not just the previous snapshot. This is useful when an autonomous run goes down the wrong path and you want to try a different approach.
 
 #### Autopilot + Fleet
 
@@ -868,8 +887,9 @@ squad > /status
 
 Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issues), `squad copilot` (add/remove @copilot), `squad doctor`, `squad nap` (context hygiene), `squad export`/`import`, `squad aspire` (observability dashboard).
 
-#### What's new (v0.8.x)
+#### What's new (v0.9.x)
 
+- **v0.9.1 is now on npm** — install with `npm install --save-dev @bradygaster/squad-cli@latest`
 - **SubSquads** — break large teams into focused sub-groups (renamed from workstreams)
 - **Crash recovery** — sessions persist to disk; agents resume from checkpoint after failures
 - **Plugin marketplace** — `squad plugin marketplace add|browse|list`
@@ -877,6 +897,7 @@ Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issu
 - **Upstream sources** — `squad upstream add|sync` to pull from shared squad configs
 - **Context hygiene** — `squad nap --deep` to compress and prune accumulated context
 - **Ralph** — event-driven monitoring agent that watches all agent activity
+- **StorageProvider abstraction** — pluggable storage layer: `FSStorageProvider` (default), `InMemoryStorageProvider`, `SQLiteStorageProvider`, plus support for custom providers (e.g. Azure Blob Storage)
 
 | | Vanilla Custom Agent | Squad |
 |---|---|---|
