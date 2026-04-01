@@ -305,7 +305,9 @@ When creating or modifying database tables.
 | **Scope** | Available to all agents in the session |
 | **Discovery** | VS Code has a built-in MCP server gallery (search `@mcp` in Extensions) |
 | **Security** | Servers run locally — your credentials stay on your machine |
-| **OAuth / API keys** | MCP servers can request you to visit a URL for out-of-band auth flows (e.g. OAuth, API key entry) |
+| **OAuth / API keys** | MCP servers can request you to visit a URL for out-of-band auth flows (e.g. OAuth, API key entry). Microsoft Entra ID authentication no longer shows the consent screen on every login (v1.0.13+) |
+| **MCP Sampling** | MCP servers can request LLM inference on your behalf — the CLI shows a review prompt for approval before allowing it (v1.0.13+) |
+| **Session continuity** | `/clear` preserves MCP servers in the new session (v1.0.12+) |
 
 ---
 
@@ -352,6 +354,7 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
 - Use `"command"` as a **cross-platform alias** for `bash`/`powershell` shell commands — works on all platforms without separate entries
 - `"timeout"` is accepted as an alias for `"timeoutSec"` for readable config
 - Personal hooks (`~/.copilot/hooks/`) apply across all repos; repo-level hooks (`.github/hooks/`) are scoped to that repo
+- Plugin hooks receive `CLAUDE_PROJECT_DIR` (absolute path to the project root) and `CLAUDE_PLUGIN_DATA` (plugin data directory) environment variables, and support `{{project_dir}}` and `{{plugin_data_dir}}` template variables in hook configs (v1.0.12+)
 
 | | |
 |---|---|
@@ -584,7 +587,7 @@ On entering autopilot, the CLI prompts you to choose permissions:
 2. **Continue with limited permissions** — auto-denies tool requests that need approval
 3. **Cancel**
 
-You can grant full permissions mid-session with the `/allow-all` (or `/yolo`) command.
+You can grant full permissions mid-session with the `/allow-all` (or `/yolo`) command. Use `/allow-all on` to enable, `/allow-all off` to disable, and `/allow-all show` to check the current state (v1.0.12+).
 
 #### Autopilot + Fleet
 
@@ -878,6 +881,15 @@ Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issu
 - **Context hygiene** — `squad nap --deep` to compress and prune accumulated context
 - **Ralph** — event-driven monitoring agent that watches all agent activity
 
+#### What's new (v0.9.x)
+
+- **Cross-squad orchestration** — squads can delegate work to other squads; one squad acts as an orchestrator and another as a sub-squad
+- **Machine capability routing** — task routing based on model capabilities available in the session (e.g. vision, reasoning effort)
+- **Squad scheduler** — schedule recurring tasks that run automatically on a cron-like schedule
+- **Distributed mesh** — link multiple squad instances across repos or machines into a coordinated mesh with `mesh.json` config
+- **Cooperative rate limiting** — agents coordinate to avoid hitting API rate limits during parallel fan-out
+- **Persistent Ralph** — Ralph (monitoring agent) now survives session restarts and accumulates observations across runs
+
 | | Vanilla Custom Agent | Squad |
 |---|---|---|
 | **Memory** | Fresh every session | `history.md` per agent, `decisions.md` shared |
@@ -1027,7 +1039,7 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 - [Maximize Agentic Capabilities](https://github.blog/ai-and-ml/github-copilot/how-to-maximize-github-copilots-agentic-capabilities/) · [Mission Control](https://github.blog/changelog/2025-10-28-a-mission-control-to-assign-steer-and-track-copilot-coding-agent-tasks/) · [Agents vs Skills vs Instructions](https://github.com/orgs/community/discussions/183962) · [Agentic Workflows](https://github.blog/ai-and-ml/automate-repository-tasks-with-github-agentic-workflows/)
 
 **CLI Release Notes**
-- [GitHub Copilot CLI releases](https://github.com/github/copilot-cli/releases) — full changelog for every CLI version (v1.0+ is GA)
+- [GitHub Copilot CLI releases](https://github.com/github/copilot-cli/releases) — full changelog for every CLI version (v1.0.14 stable · v1.0.15-x prerelease)
 
 **Platform**
 - [Copilot SDK](https://github.com/github/copilot-sdk) · [Copilot Spaces](https://docs.github.com/en/copilot/how-tos/provide-context/use-copilot-spaces)
