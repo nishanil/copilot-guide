@@ -307,6 +307,27 @@ When creating or modifying database tables.
 | **Security** | Servers run locally — your credentials stay on your machine |
 | **OAuth / API keys** | MCP servers can request you to visit a URL for out-of-band auth flows (e.g. OAuth, API key entry) |
 
+#### MCP Authentication (CLI)
+
+Use `/mcp auth` to authenticate with an MCP server that requires OAuth credentials:
+
+```
+> /mcp auth github
+```
+
+The CLI launches a **device code flow** (RFC 8628) — you visit a short URL, enter the code shown in the terminal, and the token is stored for future sessions. This also works in **headless and CI environments** where browser-based OAuth isn't possible. You can re-authenticate or switch accounts at any time.
+
+#### Managing MCP servers from the CLI
+
+Manage your MCP server configuration without editing JSON files directly. The `mcp.config.*` RPCs let you add, update, and remove servers programmatically — useful for scripts and automation:
+
+| Command | What it does |
+|---|---|
+| `mcp.config.list` | List all configured MCP servers |
+| `mcp.config.add` | Add a new MCP server |
+| `mcp.config.update` | Update an existing server's config |
+| `mcp.config.remove` | Remove a server |
+
 ---
 
 ### Hooks
@@ -346,6 +367,8 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
 | `post-edit` | After Copilot edits a file |
 | `pre-commit` | Before a git commit |
 | `startup` | When a CLI session starts — auto-submits a prompt or slash command |
+| `postToolUse` | After any tool call **succeeds** |
+| `postToolUseFailure` | After any tool call **fails** — use to log errors or alert on unexpected failures *(new in v1.0.15)* |
 
 **Config notes:**
 
@@ -600,6 +623,16 @@ Autopilot and `/fleet` are independent features that combine well. A common work
 | **Toggle** | Shift+Tab during a session, or `--autopilot` flag |
 | **Cost** | Each autonomous continuation step uses premium requests |
 | **Docs** | [Autopilot mode](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/autopilot) |
+
+#### Sharing sessions
+
+Use `/share html` to export the current CLI session (including any research reports or agent output) as a **self-contained, interactive HTML file** you can share with teammates:
+
+```
+> /share html
+```
+
+The exported file includes all conversation turns, tool output, and diffs — no server required, opens directly in a browser.
 
 ---
 
@@ -866,7 +899,7 @@ squad > Build the login page
 squad > /status
 ```
 
-Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issues), `squad copilot` (add/remove @copilot), `squad doctor`, `squad nap` (context hygiene), `squad export`/`import`, `squad aspire` (observability dashboard).
+Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issues), `squad copilot` (add/remove @copilot), `squad doctor`, `squad nap` (context hygiene), `squad export`/`import`, `squad aspire` (observability dashboard), `squad watch` (autonomous work monitor).
 
 #### What's new (v0.8.x)
 
@@ -877,6 +910,7 @@ Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issu
 - **Upstream sources** — `squad upstream add|sync` to pull from shared squad configs
 - **Context hygiene** — `squad nap --deep` to compress and prune accumulated context
 - **Ralph** — event-driven monitoring agent that watches all agent activity
+- **`squad watch` upgrade** — upgraded from simple triage poller to a full **plugin-based autonomous work monitor** with 9 opt-in capabilities (`execute`, `board`, `monitor-teams`, `wave-dispatch`, `retro`, etc.), Azure DevOps auto-detection, circuit breaker, and predictive rate limiting. Use `--execute` to auto-spawn agents on eligible issues.
 
 | | Vanilla Custom Agent | Squad |
 |---|---|---|
@@ -1028,6 +1062,7 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 
 **CLI Release Notes**
 - [GitHub Copilot CLI releases](https://github.com/github/copilot-cli/releases) — full changelog for every CLI version (v1.0+ is GA)
+- [v1.0.15 release](https://github.com/github/copilot-cli/releases/tag/v1.0.15) — `/mcp auth`, `postToolUseFailure` hooks, `/share html`, `mcp.config.*` RPCs
 
 **Platform**
 - [Copilot SDK](https://github.com/github/copilot-sdk) · [Copilot Spaces](https://docs.github.com/en/copilot/how-tos/provide-context/use-copilot-spaces)
