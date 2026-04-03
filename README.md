@@ -866,9 +866,9 @@ squad > Build the login page
 squad > /status
 ```
 
-Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issues), `squad copilot` (add/remove @copilot), `squad doctor`, `squad nap` (context hygiene), `squad export`/`import`, `squad aspire` (observability dashboard).
+Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issues), `squad copilot` (add/remove @copilot), `squad doctor`, `squad nap` (context hygiene), `squad export`/`import`, `squad aspire` (observability dashboard), `squad rc` (remote web UI), `squad watch` (local event polling), `squad loop` (continuous autonomous loop).
 
-#### What's new (v0.8.x)
+#### What's new (v0.9.x)
 
 - **SubSquads** — break large teams into focused sub-groups (renamed from workstreams)
 - **Crash recovery** — sessions persist to disk; agents resume from checkpoint after failures
@@ -877,6 +877,8 @@ Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issu
 - **Upstream sources** — `squad upstream add|sync` to pull from shared squad configs
 - **Context hygiene** — `squad nap --deep` to compress and prune accumulated context
 - **Ralph** — event-driven monitoring agent that watches all agent activity
+- **Remote Control (`squad rc`)** — browser/mobile web UI to steer squad agents; exposes a local ACP server with full passthrough to the squad coordinator
+- **Squad Loop (`squad loop`)** — run the squad autonomously in a continuous loop at configured intervals, reading its prompt from a `loop.md` file; includes hard gates to prevent runaway context growth
 
 | | Vanilla Custom Agent | Squad |
 |---|---|---|
