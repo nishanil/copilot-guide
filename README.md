@@ -47,6 +47,7 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
 │  Running Parallel    Auto-delegates work; /fleet for explicit        │
 │    Tasks & /fleet    parallel execution via subagents                │
 │  Autopilot Mode      Hands-off autonomous task completion (CLI)     │
+│  Critic Agent        Second-opinion plan & code review (CLI)        │
 │  Coding Agent        Autonomous cloud agent — issues in, PRs out    │
 │  Agentic Workflows   Automate repo tasks via GitHub Actions + AI    │
 │  Mission Control     Dashboard to manage coding agents at scale     │
@@ -94,6 +95,7 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
 - [Agentic Features](#agentic-features)
   - [Running Parallel Tasks](#running-parallel-tasks)
   - [Autopilot Mode](#autopilot-mode)
+  - [Critic Agent](#critic-agent)
   - [Copilot Coding Agent](#copilot-coding-agent)
   - [Agentic Workflows](#agentic-workflows)
   - [Mission Control](#mission-control)
@@ -253,6 +255,8 @@ When creating or modifying database tables.
 
 **Effect:** When Copilot detects a task related to migrations, it loads this skill automatically. Works across CLI, VS Code, and the coding agent.
 
+> 💡 **Built-in skills:** The Copilot CLI ships with built-in skills out of the box (e.g., a guide for customizing the coding agent environment). Check `~/.copilot/skills/` after installation to see what's included.
+
 | | |
 |---|---|
 | **Scope** | Auto-loaded when the task domain matches |
@@ -307,6 +311,27 @@ When creating or modifying database tables.
 | **Security** | Servers run locally — your credentials stay on your machine |
 | **OAuth / API keys** | MCP servers can request you to visit a URL for out-of-band auth flows (e.g. OAuth, API key entry) |
 
+#### Authenticating with MCP servers (CLI)
+
+Use `/mcp auth <server>` to authenticate with an MCP server. The CLI supports OAuth redirect URIs and falls back to **device code flow** ([RFC 8628](https://www.rfc-editor.org/rfc/rfc8628)) when the redirect URI approach isn't available — for example, with providers like Slack that require HTTPS.
+
+```
+> /mcp auth slack
+→ Opening device authorization URL…
+→ Enter code XXXX-XXXX at https://slack.com/device
+```
+
+#### Managing persistent server config via RPCs
+
+The CLI exposes `mcp.config` server RPCs for programmatic management of persistent MCP server configurations:
+
+| RPC | Purpose |
+|---|---|
+| `mcp.config.list` | List all configured MCP servers |
+| `mcp.config.add` | Add a new server to persistent config |
+| `mcp.config.update` | Update an existing server's configuration |
+| `mcp.config.remove` | Remove a server from persistent config |
+
 ---
 
 ### Hooks
@@ -343,6 +368,10 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
 
 | Event | Trigger |
 |---|---|
+| `preToolUse` | Before a tool is executed — set `permissionDecision: 'allow'` to suppress the approval prompt |
+| `postToolUse` | After a tool succeeds |
+| `postToolUseFailure` | After a tool fails (note: `postToolUse` only fires on success) |
+| `notification` | Fires asynchronously on shell completion, permission prompts, elicitation dialogs, and agent completion |
 | `post-edit` | After Copilot edits a file |
 | `pre-commit` | Before a git commit |
 | `startup` | When a CLI session starts — auto-submits a prompt or slash command |
@@ -351,6 +380,9 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
 
 - Use `"command"` as a **cross-platform alias** for `bash`/`powershell` shell commands — works on all platforms without separate entries
 - `"timeout"` is accepted as an alias for `"timeoutSec"` for readable config
+- In `preToolUse` hooks, returning `permissionDecision: 'allow'` suppresses the interactive tool approval prompt
+- `postToolUse` fires **only on success** — use `postToolUseFailure` to handle tool errors separately
+- `notification` hooks run **asynchronously** and do not block execution; useful for logging or sending alerts
 - Personal hooks (`~/.copilot/hooks/`) apply across all repos; repo-level hooks (`.github/hooks/`) are scoped to that repo
 
 | | |
@@ -600,6 +632,57 @@ Autopilot and `/fleet` are independent features that combine well. A common work
 | **Toggle** | Shift+Tab during a session, or `--autopilot` flag |
 | **Cost** | Each autonomous continuation step uses premium requests |
 | **Docs** | [Autopilot mode](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/autopilot) |
+
+---
+
+### Critic Agent
+
+A built-in agent that automatically reviews plans and complex implementations using a **complementary model** — providing a second opinion to catch errors before you commit to a direction.
+
+> **When you need it:** You want an automatic peer review of plans or implementations without having to ask for one. Catching logical errors at the plan stage is far cheaper than discovering them mid-implementation.
+
+The Critic agent runs in **experimental mode** for Claude models. Enable it in your CLI settings:
+
+```jsonc
+// ~/.copilot/settings.json
+{
+  "experimental": {
+    "critic": true
+  }
+}
+```
+
+**How it works:**
+1. You submit a plan or complex implementation request
+2. The primary model generates the plan or implementation
+3. The Critic agent automatically sends it to a complementary model for review
+4. Disagreements and potential errors surface before execution continues
+
+<details markdown>
+<summary>Example — Critic catches an issue in a RecipeShare migration plan</summary>
+
+```
+> Plan a migration to add soft-delete to all RecipeShare tables
+
+[Primary model] Plan: Add deleted_at NULLABLE column to recipes,
+  ingredients, and reviews tables. Update queries to filter WHERE
+  deleted_at IS NULL.
+
+[Critic] ⚠️ Plan gap detected: The Drizzle schema types in
+  src/server/db/schema.ts are not included in the migration plan.
+  Without updating the TypeScript types, TypeScript strict mode will
+  raise errors on the new nullable column. Recommend adding a step
+  to update schema types before running migrations.
+```
+
+</details>
+
+| | |
+|---|---|
+| **Where** | Copilot CLI |
+| **Status** | Experimental — available for Claude models |
+| **Trigger** | Automatic on plans and complex implementations |
+| **Difference from code review** | Runs *before* execution, not after — catches plan-level errors early |
 
 ---
 
@@ -971,6 +1054,7 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 | **Plugins** | Bundled agent toolkits | `plugin.json` manifest | When sharing agent setups across repos |
 | **Running Parallel Tasks / `/fleet`** | Auto-delegates or explicitly fans out work to subagents | *(runtime capability)* / `/fleet` slash command | When your request has multiple independent jobs |
 | **Autopilot Mode** | Hands-off autonomous task completion | Copilot CLI (`--autopilot` / Shift+Tab) | When you want Copilot to work to completion without interaction |
+| **Critic Agent** | Auto second-opinion review of plans & implementations | Copilot CLI (experimental, Claude models) | When you want automatic error-catching before execution |
 | **Coding Agent** | Autonomous cloud agent | GitHub infrastructure | When you want async issue automation |
 | **Agentic Workflows** | AI + GitHub Actions automation | GitHub Actions | When you want automated repo maintenance |
 | **Mission Control** | Multi-agent dashboard | GitHub.com / VS Code | When managing agents at scale |
