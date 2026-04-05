@@ -51,6 +51,7 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
 │  Agentic Workflows   Automate repo tasks via GitHub Actions + AI    │
 │  Mission Control     Dashboard to manage coding agents at scale     │
 │  Agents Tab          Repo-level UI for agent tasks and tracking     │
+│  Critic Agent        Auto-reviews plans with a complementary model  │
 │                                                                     │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
@@ -98,6 +99,7 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
   - [Agentic Workflows](#agentic-workflows)
   - [Mission Control](#mission-control)
   - [Agents Tab](#agents-tab)
+  - [Critic Agent](#critic-agent)
 - [Platform Features](#platform-features)
   - [Agentic Memory](#agentic-memory)
   - [Copilot Spaces](#copilot-spaces)
@@ -253,6 +255,8 @@ When creating or modifying database tables.
 
 **Effect:** When Copilot detects a task related to migrations, it loads this skill automatically. Works across CLI, VS Code, and the coding agent.
 
+> 💡 **Built-in skills:** As of CLI v1.0.17, the CLI ships with built-in skills — for example, a guide for customizing the Copilot cloud agent's environment. Built-in skills work alongside your own `.github/skills/` files and can be browsed with `copilot skills list`.
+
 | | |
 |---|---|
 | **Scope** | Auto-loaded when the task domain matches |
@@ -306,6 +310,9 @@ When creating or modifying database tables.
 | **Discovery** | VS Code has a built-in MCP server gallery (search `@mcp` in Extensions) |
 | **Security** | Servers run locally — your credentials stay on your machine |
 | **OAuth / API keys** | MCP servers can request you to visit a URL for out-of-band auth flows (e.g. OAuth, API key entry) |
+| **`/mcp auth`** | Re-authenticate an MCP server that requires OAuth, with account-switching support (v1.0.15+) |
+| **Headless / CI** | OAuth falls back to [device code flow (RFC 8628)](https://www.rfc-editor.org/rfc/rfc8628) for environments without a browser (v1.0.15+) |
+| **Programmatic config** | `mcp.config.list/add/update/remove` server RPCs let scripts manage persistent MCP server configuration without editing JSON manually (v1.0.15+) |
 
 ---
 
@@ -346,12 +353,19 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
 | `post-edit` | After Copilot edits a file |
 | `pre-commit` | Before a git commit |
 | `startup` | When a CLI session starts — auto-submits a prompt or slash command |
+| `preToolUse` | Before any tool is invoked — script can allow/deny the call programmatically |
+| `postToolUse` | After a tool call **succeeds** |
+| `postToolUseFailure` | After a tool call **fails** — handle errors and retries separately from success |
+| `PermissionRequest` | Before a tool permission prompt is shown — script can approve or deny without user interaction |
+| `notification` | Fires **asynchronously** on shell completion, permission prompts, elicitation dialogs, and agent completion — useful for external notifications |
 
 **Config notes:**
 
 - Use `"command"` as a **cross-platform alias** for `bash`/`powershell` shell commands — works on all platforms without separate entries
 - `"timeout"` is accepted as an alias for `"timeoutSec"` for readable config
 - Personal hooks (`~/.copilot/hooks/`) apply across all repos; repo-level hooks (`.github/hooks/`) are scoped to that repo
+- `preToolUse` hooks can set `permissionDecision: "allow"` to silently approve a tool call (v1.0.18+, suppresses the approval prompt)
+- `postToolUse` and `postToolUseFailure` are separate events — `postToolUse` only fires on success (changed in v1.0.15)
 
 | | |
 |---|---|
@@ -723,7 +737,31 @@ A repo-level tab on GitHub.com for launching, tracking, and reviewing agent task
 
 ---
 
-## Platform Features
+### Critic Agent
+
+A built-in agent that **automatically reviews plans and complex implementations** using a complementary model to catch errors early, before you commit to a code path.
+
+> **When you need it:** You've just had Copilot generate a plan or a complex implementation and want a second opinion from a different model before proceeding — without switching tools or manually prompting for review.
+
+The Critic runs automatically in **experimental mode for Claude models** (as of v1.0.18). After Copilot produces a plan or complex output, the Critic applies a second model's perspective to surface issues, contradictions, or gaps — so you see potential problems before execution.
+
+<details markdown>
+<summary>How it fits into the plan → fleet → autopilot workflow</summary>
+
+1. Use **plan mode** (Shift+Tab) to let Copilot generate an implementation plan
+2. **Critic reviews the plan** using a complementary model — flags risky steps, missing edge cases
+3. You refine the plan based on Critic feedback
+4. Accept the plan → `/fleet` or autopilot executes it
+
+</details>
+
+| | |
+|---|---|
+| **Where** | Copilot CLI (experimental, v1.0.18+) |
+| **Requires** | Experimental mode enabled; Claude model in use |
+| **Difference from code review** | Critic catches plan-level issues before code is written, not after |
+
+---
 
 > Built-in intelligence and extensibility that power the entire Copilot ecosystem.
 
@@ -868,8 +906,10 @@ squad > /status
 
 Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issues), `squad copilot` (add/remove @copilot), `squad doctor`, `squad nap` (context hygiene), `squad export`/`import`, `squad aspire` (observability dashboard).
 
-#### What's new (v0.8.x)
+#### What's new (v0.9.x)
 
+- **v0.9.1 hotfix** — fixed broken npm install from v0.9.0 (file: SDK dependency replaced with semver range)
+- **CLI packaging smoke test** (v0.8.25) — 32-test suite validates all 27 CLI commands before publish; pre-publish CI gate blocks broken releases from reaching npm
 - **SubSquads** — break large teams into focused sub-groups (renamed from workstreams)
 - **Crash recovery** — sessions persist to disk; agents resume from checkpoint after failures
 - **Plugin marketplace** — `squad plugin marketplace add|browse|list`
@@ -975,6 +1015,7 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 | **Agentic Workflows** | AI + GitHub Actions automation | GitHub Actions | When you want automated repo maintenance |
 | **Mission Control** | Multi-agent dashboard | GitHub.com / VS Code | When managing agents at scale |
 | **Agents Tab** | Repo-level agent UI | GitHub.com | When tracking agent work per repo |
+| **Critic Agent** | Auto-reviews plans with a second model | Copilot CLI (experimental) | When you want plan-level error detection before execution |
 | **Agentic Memory** | Persistent per-repo memory | Built-in | When you want Copilot to remember across sessions |
 | **Copilot Spaces** | Project knowledge containers | GitHub.com | When packaging shared context for teams |
 | **Copilot SDK** | Programmatic agent building | npm / pip / go | When you need agents as code, not prompts |
@@ -1027,7 +1068,7 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 - [Maximize Agentic Capabilities](https://github.blog/ai-and-ml/github-copilot/how-to-maximize-github-copilots-agentic-capabilities/) · [Mission Control](https://github.blog/changelog/2025-10-28-a-mission-control-to-assign-steer-and-track-copilot-coding-agent-tasks/) · [Agents vs Skills vs Instructions](https://github.com/orgs/community/discussions/183962) · [Agentic Workflows](https://github.blog/ai-and-ml/automate-repository-tasks-with-github-agentic-workflows/)
 
 **CLI Release Notes**
-- [GitHub Copilot CLI releases](https://github.com/github/copilot-cli/releases) — full changelog for every CLI version (v1.0+ is GA)
+- [GitHub Copilot CLI releases](https://github.com/github/copilot-cli/releases) — full changelog for every CLI version (v1.0+ is GA); recent highlights: [v1.0.18](https://github.com/github/copilot-cli/releases/tag/v1.0.18) (Critic agent, notification hooks) · [v1.0.17](https://github.com/github/copilot-cli/releases/tag/v1.0.17) (built-in skills) · [v1.0.15](https://github.com/github/copilot-cli/releases/tag/v1.0.15) (/mcp auth, postToolUseFailure hooks, /share html)
 
 **Platform**
 - [Copilot SDK](https://github.com/github/copilot-sdk) · [Copilot Spaces](https://docs.github.com/en/copilot/how-tos/provide-context/use-copilot-spaces)
