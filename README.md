@@ -47,6 +47,7 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
 │  Running Parallel    Auto-delegates work; /fleet for explicit        │
 │    Tasks & /fleet    parallel execution via subagents                │
 │  Autopilot Mode      Hands-off autonomous task completion (CLI)     │
+│  Critic Agent        Dual-model plan & code review (experimental)   │
 │  Coding Agent        Autonomous cloud agent — issues in, PRs out    │
 │  Agentic Workflows   Automate repo tasks via GitHub Actions + AI    │
 │  Mission Control     Dashboard to manage coding agents at scale     │
@@ -94,6 +95,7 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
 - [Agentic Features](#agentic-features)
   - [Running Parallel Tasks](#running-parallel-tasks)
   - [Autopilot Mode](#autopilot-mode)
+  - [Critic Agent](#critic-agent)
   - [Copilot Coding Agent](#copilot-coding-agent)
   - [Agentic Workflows](#agentic-workflows)
   - [Mission Control](#mission-control)
@@ -253,9 +255,12 @@ When creating or modifying database tables.
 
 **Effect:** When Copilot detects a task related to migrations, it loads this skill automatically. Works across CLI, VS Code, and the coding agent.
 
+> 💡 **Built-in skills:** The CLI ships with built-in skills out of the box — no files required. The first is `customizing-copilot-cloud-agents-environment`, a guide for setting up the [Copilot Coding Agent's environment](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/customizing-the-development-environment-for-copilot-coding-agent). More built-in skills will be added over time. Your own `.github/skills/` files work alongside built-in ones.
+
 | | |
 |---|---|
 | **Scope** | Auto-loaded when the task domain matches |
+| **Built-in skills** | Bundled with the CLI — no files required (added in v1.0.17) |
 | **Difference from prompts** | Skills are auto-detected; prompts are manually invoked |
 
 ---
@@ -300,12 +305,24 @@ When creating or modifying database tables.
 | "The issue says..." (you paste it) | Agent reads the issue via GitHub MCP server |
 | "Upload to cloud storage" (you do it manually) | Agent calls cloud storage API through an MCP server |
 
+#### MCP authentication & management (CLI)
+
+| Command | Description |
+|---|---|
+| `/mcp auth` | Authenticate or re-authenticate an MCP OAuth server; supports account switching |
+| `mcp.config.list` | List all persistent MCP server configurations (server RPC) |
+| `mcp.config.add` | Add a persistent MCP server configuration (server RPC) |
+| `mcp.config.update` | Update an existing MCP server configuration (server RPC) |
+| `mcp.config.remove` | Remove a persistent MCP server configuration (server RPC) |
+
+OAuth flows support HTTPS redirect URIs (via self-signed certificate fallback) and a device code flow (RFC 8628) as a fallback for headless and CI environments.
+
 | | |
 |---|---|
 | **Scope** | Available to all agents in the session |
 | **Discovery** | VS Code has a built-in MCP server gallery (search `@mcp` in Extensions) |
 | **Security** | Servers run locally — your credentials stay on your machine |
-| **OAuth / API keys** | MCP servers can request you to visit a URL for out-of-band auth flows (e.g. OAuth, API key entry) |
+| **OAuth / API keys** | Use `/mcp auth` for OAuth flows; device code flow (RFC 8628) supported in headless/CI |
 
 ---
 
@@ -332,6 +349,12 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
     },
     "startup": {
       "prompt": "/compact Summarize recent changes in RecipeShare"
+    },
+    "postToolUseFailure": {
+      "command": "echo 'Tool ${tool} failed — check logs' >> .copilot/errors.log"
+    },
+    "notification": {
+      "command": "osascript -e 'display notification \"Copilot finished\" with title \"RecipeShare\"'"
     }
   }
 }
@@ -346,6 +369,11 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
 | `post-edit` | After Copilot edits a file |
 | `pre-commit` | Before a git commit |
 | `startup` | When a CLI session starts — auto-submits a prompt or slash command |
+| `preToolUse` | Before each tool call; return `permissionDecision: 'allow'` to auto-approve without prompting |
+| `postToolUse` | After a **successful** tool call (does **not** fire on failures) |
+| `postToolUseFailure` | After a **failed** tool call (new in v1.0.15) |
+| `notification` | Asynchronously on shell completion, permission prompts, elicitation dialogs, and agent completion (new in v1.0.18) |
+| `PermissionRequest` | When a tool requests permission — script can approve or deny programmatically (new in v1.0.16) |
 
 **Config notes:**
 
@@ -599,7 +627,45 @@ Autopilot and `/fleet` are independent features that combine well. A common work
 | **Where** | Copilot CLI only (GA as of v1.0, March 2026) |
 | **Toggle** | Shift+Tab during a session, or `--autopilot` flag |
 | **Cost** | Each autonomous continuation step uses premium requests |
+| **Session export** | Use `/share html` to export the session as a self-contained interactive HTML file (added in v1.0.15) |
 | **Docs** | [Autopilot mode](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/autopilot) |
+
+---
+
+### Critic Agent
+
+An automatic **dual-model review** step that uses a complementary model to check plans and complex implementations for errors before they're finalized.
+
+> **When you need it:** You want an independent second opinion on a complex implementation — catching issues a single model might overlook because it produced the code in the first place.
+
+- Automatically activates during **plan mode** and on complex multi-step implementations
+- Uses a **different model** from the one that authored the code, so it brings a fresh perspective
+- Surfaces contradictions, missed edge cases, and logical errors
+- Currently **experimental** — available for Claude models (enable via the `experimental` CLI setting)
+
+<details markdown>
+<summary>How to enable the Critic Agent (experimental)</summary>
+
+In `~/.copilot/settings.json`:
+
+```jsonc
+{
+  "experimental": {
+    "criticAgent": true
+  }
+}
+```
+
+Once enabled, the CLI automatically invokes the Critic after generating a plan or complex implementation. You'll see a "Critic review" step appear in the timeline before Copilot proceeds.
+
+</details>
+
+| | |
+|---|---|
+| **Where** | Copilot CLI only |
+| **Status** | Experimental — Claude models only (added in v1.0.18) |
+| **Cost** | Uses an additional LLM call with a complementary model |
+| **Difference from code review** | Critic runs _before_ code is finalized, not after a PR is opened |
 
 ---
 
@@ -868,7 +934,7 @@ squad > /status
 
 Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issues), `squad copilot` (add/remove @copilot), `squad doctor`, `squad nap` (context hygiene), `squad export`/`import`, `squad aspire` (observability dashboard).
 
-#### What's new (v0.8.x)
+#### What's new (v0.9.x)
 
 - **SubSquads** — break large teams into focused sub-groups (renamed from workstreams)
 - **Crash recovery** — sessions persist to disk; agents resume from checkpoint after failures
@@ -971,6 +1037,7 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 | **Plugins** | Bundled agent toolkits | `plugin.json` manifest | When sharing agent setups across repos |
 | **Running Parallel Tasks / `/fleet`** | Auto-delegates or explicitly fans out work to subagents | *(runtime capability)* / `/fleet` slash command | When your request has multiple independent jobs |
 | **Autopilot Mode** | Hands-off autonomous task completion | Copilot CLI (`--autopilot` / Shift+Tab) | When you want Copilot to work to completion without interaction |
+| **Critic Agent** | Dual-model review of plans & implementations | Copilot CLI (experimental, `~/.copilot/settings.json`) | When you want an automatic second opinion before code is finalized |
 | **Coding Agent** | Autonomous cloud agent | GitHub infrastructure | When you want async issue automation |
 | **Agentic Workflows** | AI + GitHub Actions automation | GitHub Actions | When you want automated repo maintenance |
 | **Mission Control** | Multi-agent dashboard | GitHub.com / VS Code | When managing agents at scale |
