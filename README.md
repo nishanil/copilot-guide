@@ -47,6 +47,7 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
 │  Running Parallel    Auto-delegates work; /fleet for explicit        │
 │    Tasks & /fleet    parallel execution via subagents                │
 │  Autopilot Mode      Hands-off autonomous task completion (CLI)     │
+│  Critic Agent        Auto-reviews plans with a complementary model  │
 │  Coding Agent        Autonomous cloud agent — issues in, PRs out    │
 │  Agentic Workflows   Automate repo tasks via GitHub Actions + AI    │
 │  Mission Control     Dashboard to manage coding agents at scale     │
@@ -94,6 +95,7 @@ For detailed documentation, see the [Further Reading](#further-reading) section 
 - [Agentic Features](#agentic-features)
   - [Running Parallel Tasks](#running-parallel-tasks)
   - [Autopilot Mode](#autopilot-mode)
+  - [Critic Agent](#critic-agent)
   - [Copilot Coding Agent](#copilot-coding-agent)
   - [Agentic Workflows](#agentic-workflows)
   - [Mission Control](#mission-control)
@@ -253,10 +255,13 @@ When creating or modifying database tables.
 
 **Effect:** When Copilot detects a task related to migrations, it loads this skill automatically. Works across CLI, VS Code, and the coding agent.
 
+> 💡 **Built-in skills:** As of CLI v1.0.17, the Copilot CLI ships with built-in skills pre-installed — the first one documents how to customize the coding agent's environment (`copilot-setup-steps.yml`). Your own `.github/skills/` always take precedence.
+
 | | |
 |---|---|
 | **Scope** | Auto-loaded when the task domain matches |
 | **Difference from prompts** | Skills are auto-detected; prompts are manually invoked |
+| **Built-in skills** | Shipped with the CLI starting v1.0.17; your own skills override them |
 
 ---
 
@@ -346,12 +351,15 @@ Custom scripts that run automatically at specific lifecycle events — like pre-
 | `post-edit` | After Copilot edits a file |
 | `pre-commit` | Before a git commit |
 | `startup` | When a CLI session starts — auto-submits a prompt or slash command |
+| `PermissionRequest` | When Copilot requests permission to use a tool — script can programmatically approve or deny |
+| `notification` | Fires asynchronously on shell completion, permission prompts, elicitation dialogs, and agent completion |
 
 **Config notes:**
 
 - Use `"command"` as a **cross-platform alias** for `bash`/`powershell` shell commands — works on all platforms without separate entries
 - `"timeout"` is accepted as an alias for `"timeoutSec"` for readable config
 - Personal hooks (`~/.copilot/hooks/`) apply across all repos; repo-level hooks (`.github/hooks/`) are scoped to that repo
+- In a `preToolUse` hook, returning `permissionDecision: 'allow'` suppresses the interactive tool approval prompt entirely
 
 | | |
 |---|---|
@@ -600,6 +608,32 @@ Autopilot and `/fleet` are independent features that combine well. A common work
 | **Toggle** | Shift+Tab during a session, or `--autopilot` flag |
 | **Cost** | Each autonomous continuation step uses premium requests |
 | **Docs** | [Autopilot mode](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/autopilot) |
+
+---
+
+### Critic Agent
+
+An automatic second opinion — when Copilot creates a plan or produces a complex implementation, the **Critic agent** spawns a separate instance using a complementary model to review the output for errors, inconsistencies, and missed requirements before proceeding.
+
+> **When you need it:** You want an autonomous quality gate during long-running autopilot sessions — catching logic errors in plans before they propagate into dozens of generated files.
+
+**How it works:**
+
+1. You approve a plan (or Copilot generates a complex implementation)
+2. The Critic agent runs silently in the background using a different model
+3. If the Critic finds issues, Copilot surfaces them and revises before continuing
+4. If the Critic is satisfied, Copilot proceeds
+
+```
+You → Copilot creates plan → Critic reviews plan → Issues? → Revise → Execute
+                                                 ↘ Looks good → Execute
+```
+
+| | |
+|---|---|
+| **Status** | Experimental — requires experimental mode with Claude models |
+| **Activation** | Automatic when eligible; no additional config needed |
+| **Cost** | Uses additional premium requests for the Critic's review pass |
 
 ---
 
@@ -868,13 +902,21 @@ squad > /status
 
 Key CLI commands: `squad init`, `squad status`, `squad triage` (auto-triage issues), `squad copilot` (add/remove @copilot), `squad doctor`, `squad nap` (context hygiene), `squad export`/`import`, `squad aspire` (observability dashboard).
 
+#### What's new (v0.9.x)
+
+- **Cross-squad orchestration** — squads in different repos coordinate via a shared orchestration layer; one squad can delegate tasks to another
+- **Distributed mesh** — configure multiple squads to sync state via `mesh.json`; `squad upstream add|sync` pulls from shared squad configs across org repos
+- **Squad scheduler** — schedule recurring agent tasks (nightly audits, weekly triage, etc.) without manual intervention
+- **Cooperative rate limiting** — agents share a rate-limit budget so parallel workloads don't throttle each other against API limits
+- **Machine capability routing** — route tasks based on available machine resources (Docker, GPU, specific OS); the scheduler skips subtasks the current machine can't run
+- **Persistent Ralph** — Ralph is now a long-lived monitoring agent that can survive session restarts and observe all agent activity continuously
+
 #### What's new (v0.8.x)
 
 - **SubSquads** — break large teams into focused sub-groups (renamed from workstreams)
 - **Crash recovery** — sessions persist to disk; agents resume from checkpoint after failures
 - **Plugin marketplace** — `squad plugin marketplace add|browse|list`
 - **Azure DevOps adapter** — Squad for enterprise via `CommunicationAdapter`
-- **Upstream sources** — `squad upstream add|sync` to pull from shared squad configs
 - **Context hygiene** — `squad nap --deep` to compress and prune accumulated context
 - **Ralph** — event-driven monitoring agent that watches all agent activity
 
@@ -895,7 +937,7 @@ A curated collection of Copilot resources, customizations, and advanced patterns
 
 **Repository:** [github.com/github/awesome-copilot](https://github.com/github/awesome-copilot)
 
-Includes custom instructions examples, agent patterns, orchestration strategies, MCP configs, community skills, and guides for maximizing agentic workflows. A great starting point for seeing how others use these features in practice.
+Includes custom instructions examples, agent patterns, orchestration strategies, MCP configs, community skills, and guides for maximizing agentic workflows. Recently added: a **Java SDK cookbook** with seven runnable JBang recipes covering the Ralph loop, error handling, multiple sessions, file management, PR visualization, session persistence, and accessibility reports. A great starting point for seeing how others use these features in practice.
 
 ---
 
@@ -971,6 +1013,7 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 | **Plugins** | Bundled agent toolkits | `plugin.json` manifest | When sharing agent setups across repos |
 | **Running Parallel Tasks / `/fleet`** | Auto-delegates or explicitly fans out work to subagents | *(runtime capability)* / `/fleet` slash command | When your request has multiple independent jobs |
 | **Autopilot Mode** | Hands-off autonomous task completion | Copilot CLI (`--autopilot` / Shift+Tab) | When you want Copilot to work to completion without interaction |
+| **Critic Agent** | Automatic second-opinion review of plans | *(experimental, Claude models)* | When you need autonomous quality gates in autopilot sessions |
 | **Coding Agent** | Autonomous cloud agent | GitHub infrastructure | When you want async issue automation |
 | **Agentic Workflows** | AI + GitHub Actions automation | GitHub Actions | When you want automated repo maintenance |
 | **Mission Control** | Multi-agent dashboard | GitHub.com / VS Code | When managing agents at scale |
@@ -1027,13 +1070,13 @@ Based on [lessons from 2,500+ repositories](https://github.blog/ai-and-ml/github
 - [Maximize Agentic Capabilities](https://github.blog/ai-and-ml/github-copilot/how-to-maximize-github-copilots-agentic-capabilities/) · [Mission Control](https://github.blog/changelog/2025-10-28-a-mission-control-to-assign-steer-and-track-copilot-coding-agent-tasks/) · [Agents vs Skills vs Instructions](https://github.com/orgs/community/discussions/183962) · [Agentic Workflows](https://github.blog/ai-and-ml/automate-repository-tasks-with-github-agentic-workflows/)
 
 **CLI Release Notes**
-- [GitHub Copilot CLI releases](https://github.com/github/copilot-cli/releases) — full changelog for every CLI version (v1.0+ is GA)
+- [GitHub Copilot CLI releases](https://github.com/github/copilot-cli/releases) — full changelog for every CLI version (v1.0+ is GA) · [v1.0.18 — Critic agent & notification hook](https://github.com/github/copilot-cli/releases/tag/v1.0.18) · [v1.0.17 — Built-in skills](https://github.com/github/copilot-cli/releases/tag/v1.0.17) · [v1.0.20 — OpenTelemetry monitoring](https://github.com/github/copilot-cli/releases/tag/v1.0.20)
 
 **Platform**
 - [Copilot SDK](https://github.com/github/copilot-sdk) · [Copilot Spaces](https://docs.github.com/en/copilot/how-tos/provide-context/use-copilot-spaces)
 
 **Community**
-- [awesome-copilot](https://github.com/github/awesome-copilot) · [Squad](https://github.com/bradygaster/squad) · [Squad Docs](https://bradygaster.github.io/squad/)
+- [awesome-copilot](https://github.com/github/awesome-copilot) · [Java SDK cookbook](https://github.com/github/awesome-copilot/tree/main/java) · [Squad](https://github.com/bradygaster/squad) · [Squad Docs](https://bradygaster.github.io/squad/) · [Squad v0.9.0 release](https://github.com/bradygaster/squad/releases/tag/v0.9.0)
 
 ---
 
